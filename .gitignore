@@ -4,6 +4,9 @@
 *.dll
 *.so
 *.dylib
+*.rdb
+*.swp
+*.vscode
 
 # Test binary, built with `go test -c`
 *.test
@@ -13,3 +16,13 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Ignore IDE specific files
+.idea*
+
+.DS_Store
+
+*.dat
+*.pgp
+*.gpg
+*.env
