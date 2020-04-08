@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"cms-utils-go/logger"
 	"encoding/json"
 	"net/http"
 )
@@ -13,14 +12,14 @@ func APICall(method, path string, requestBody PropertyMap,
 
 	requestBytes, err := requestBody.Value()
 	if err != nil {
-		logger.GetLogger().Printf("could not transform the request body %s, err: %s", requestBody, err)
+		//logger.GetLogger().Printf("could not transform the request body %s, err: %s", requestBody, err)
 		return
 	}
 
 	requestBuffer := bytes.NewBuffer(requestBytes.([]byte))
 	req, err := http.NewRequest(method, path, requestBuffer)
 	if err != nil {
-		logger.GetLogger().Printf("error while making httprequest body for %s, err: %s", requestBody, err)
+		//logger.GetLogger().Printf("error while making httprequest body for %s, err: %s", requestBody, err)
 		return
 	}
 
@@ -31,7 +30,7 @@ func APICall(method, path string, requestBody PropertyMap,
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.GetLogger().Printf("error while making the request %s, err: %s", requestBody, err)
+		//logger.GetLogger().Printf("error while making the request %s, err: %s", requestBody, err)
 		return
 	}
 
@@ -42,7 +41,7 @@ func APICall(method, path string, requestBody PropertyMap,
 
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	if err != nil {
-		logger.GetLogger().Printf("error while decoding the response body %s err:%s", resp.Body, err)
+		//logger.GetLogger().Printf("error while decoding the response body %s err:%s", resp.Body, err)
 		return
 	}
 	return
