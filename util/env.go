@@ -7,6 +7,16 @@ import (
 	"os"
 )
 
+var Region = os.Getenv("SSM_PS_RG")
+
+var sess, _ = session.NewSessionWithOptions(session.Options{
+	Config: aws.Config{Region: aws.String(Region),
+	},
+	SharedConfigState: session.SharedConfigEnable,
+})
+
+var ssmsvc = ssm.New(sess, aws.NewConfig().WithRegion(Region))
+
 // GetConfigValue get the environment value using the key.
 // if not found, then fetches it from AWS Parameter Store
 func GetConfigValue(key string) string {
@@ -15,19 +25,10 @@ func GetConfigValue(key string) string {
 	if value != "" {
 		return value
 	}
-	prefix := os.Getenv("SSM_PS_NP")
-	region := os.Getenv("SSM_PS_RG")
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Config: aws.Config{Region: aws.String(region),
-		},
-		SharedConfigState: session.SharedConfigEnable,
-	})
-	if err != nil {
-		return ""
-	}
 
+	prefix := os.Getenv("SSM_PS_NP")
 	paramterKey := prefix + "/" + key
-	ssmsvc := ssm.New(sess, aws.NewConfig().WithRegion(region))
+
 	withDecryption := false
 	param, err := ssmsvc.GetParameter(&ssm.GetParameterInput{
 		Name:           &paramterKey,
