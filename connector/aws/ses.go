@@ -31,9 +31,7 @@ type EmailDet struct {
 }
 
 type EmailClient struct {
-	Region  string
-	Key     string
-	Secret  string
+	Cred
 	session *session.Session
 	sesClient *ses.SES
 }

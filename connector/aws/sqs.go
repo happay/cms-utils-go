@@ -29,10 +29,8 @@ type QueueMessage struct {
 }
 
 type QueueClient struct {
+	Cred
 	Url    string
-	Key    string
-	Secret string
-
 	session *session.Session
 }
 

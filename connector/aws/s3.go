@@ -26,9 +26,7 @@ const FileWritePermissionMode = 0644
 const FileReadPermissionMode = 0644
 
 type S3Client struct {
-	Region     string
-	Key        string
-	Secret     string
+	Cred
 	session    *session.Session
 	s3         *s3.S3
 	BucketName string
