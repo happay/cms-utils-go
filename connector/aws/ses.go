@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"os"
@@ -22,7 +20,7 @@ const (
 
 const MatrixGroupEmail = "matrix-defenders@googlegroups.com" // matrix developer group mail
 
-var AwsSesRegion = os.Getenv("AWS_SES_REGION")
+var AwsSesRegion = os.Getenv("SSM_PS_RG")
 //var AwsSesAccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
 //var AwsSesSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 
@@ -65,7 +63,6 @@ func (emailDet EmailDet) SendEmail() (err error) {
 
 var sesConfig = &aws.Config{
 	Region:      aws.String(AwsSesRegion),
-	//Credentials: credentials.NewStaticCredentials(AwsSesAccessKeyId, AwsSesSecretAccessKey, ""),
 }
 
 func (emailDet EmailDet) createMailerInput() (emailInput *ses.SendEmailInput) {
