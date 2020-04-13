@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"os"
 	"strings"
 )
 
@@ -20,10 +20,6 @@ const (
 
 const MatrixGroupEmail = "matrix-defenders@googlegroups.com" // matrix developer group mail
 
-var AwsSesRegion = os.Getenv("SSM_PS_RG")
-//var AwsSesAccessKeyId = os.Getenv("AWS_ACCESS_KEY_ID")
-//var AwsSesSecretAccessKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
-
 // ============ Structs =============
 
 type EmailDet struct {
@@ -34,25 +30,25 @@ type EmailDet struct {
 	TextBody  string   `json:"textbody"`
 }
 
+type EmailClient struct {
+	Region  string
+	Key     string
+	Secret  string
+	session *session.Session
+	sesClient *ses.SES
+}
+
 // =========== Exposed (public) Methods - can be called from external packages ============
 
-func (emailDet EmailDet) SendEmail() (err error) {
+// SendEmail send the email using the client and with the data specified in the EmailDet
+func (emailClient *EmailClient) SendEmail(emailDet EmailDet) (err error) {
 	if err = emailDet.CheckIfValidRecipients(); err != nil {
 		return
 	}
-
-	sess, err := session.NewSession(sesConfig)
-	if err != nil {
-		reason := fmt.Sprintf("error while creating the SES session : %s", err)
-		err = errors.New(reason)
-		return
-	}
-	// creates a new AWS SES session
-	emailProvider := ses.New(sess)
 	// creates the email input
 	emailInput := emailDet.createMailerInput()
 	// sends the email
-	_, err = emailProvider.SendEmail(emailInput)
+	_, err = emailClient.sesClient.SendEmail(emailInput)
 	if err != nil {
 		return
 	}
@@ -60,10 +56,6 @@ func (emailDet EmailDet) SendEmail() (err error) {
 }
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
-
-var sesConfig = &aws.Config{
-	Region:      aws.String(AwsSesRegion),
-}
 
 func (emailDet EmailDet) createMailerInput() (emailInput *ses.SendEmailInput) {
 	recipients := make([]*string, len(emailDet.Recipient))
@@ -114,5 +106,23 @@ func (emailDet *EmailDet) CheckIfValidRecipients() (err error) {
 			return
 		}
 	}
+	return
+}
+
+// New creates new Email Client for SES
+func (emailClient *EmailClient) New() (err error){
+	var config aws.Config
+	config.Region = aws.String(emailClient.Region)
+	if emailClient.Key != "" && emailClient.Secret != "" {
+		config.Credentials = credentials.NewStaticCredentials(emailClient.Key, emailClient.Secret, "")
+	}
+
+	sess, err := session.NewSession(&config)
+	if err != nil {
+		reason := fmt.Sprintf("error while creating the SES session : %s", err)
+		err = errors.New(reason)
+		return
+	}
+	emailClient.sesClient = ses.New(sess)
 	return
 }
