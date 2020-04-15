@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	connect "github.com/happay/cms-utils-go/connector/aws"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -26,7 +27,7 @@ const FileWritePermissionMode = 0644
 const FileReadPermissionMode = 0644
 
 type S3Client struct {
-	Cred
+	connect.Cred
 	session    *session.Session
 	s3         *s3.S3
 	BucketName string

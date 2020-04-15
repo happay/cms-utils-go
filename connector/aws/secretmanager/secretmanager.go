@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	connect "github.com/happay/cms-utils-go/connector/aws"
 )
 
 func GetValueFromSecretManager(key string) (result *secretsmanager.GetSecretValueOutput, err error){
@@ -25,5 +26,5 @@ func GetValueFromSecretManager(key string) (result *secretsmanager.GetSecretValu
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 var secretManagerConfig = &aws.Config{
-	Region:      aws.String(Region),
+	Region:      aws.String(connect.Region),
 }

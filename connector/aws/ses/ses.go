@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+	connect "github.com/happay/cms-utils-go/connector/aws"
 	"strings"
 )
 
@@ -15,10 +16,7 @@ import (
 
 const (
 	CharSet        = "UTF-8" // The character encoding for the email.
-	NoReplyEmailId = "no-reply@happay.in"
 )
-
-const MatrixGroupEmail = "matrix-defenders@googlegroups.com" // matrix developer group mail
 
 // ============ Structs =============
 
@@ -31,7 +29,7 @@ type EmailDet struct {
 }
 
 type EmailClient struct {
-	Cred
+	connect.Cred
 	session *session.Session
 	sesClient *ses.SES
 }
