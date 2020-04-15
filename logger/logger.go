@@ -14,7 +14,6 @@ import (
 
 const GenerateDirectoryPermissionMode = 0750
 const FileWritePermissionMode = 0644
-const FileReadPermissionMode = 0644
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 
@@ -54,11 +53,22 @@ func initializeLogger(logPrefix, logPath string) {
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
-// used for middleware, as they require an io.Writer for writing logs
+// GetLogger returns the logger object. It takes two input parameters.
+// - logPrefix - it is a string used as Prefix on each log line
+// - logPath - absolute path of the log file where the logs will be written
 func GetLogger(logPrefix, logPath string) *log.Logger {
 	logInit.Do(func() {
 		initializeLogger(logPrefix, logPath)
 	})
 	return logger
 }
+
+// GetLogWriter returns an writer interface. This can be used in the middleware.
+func GetLogWriter(logPrefix, logPath string) *io.Writer {
+	logInit.Do(func() {
+		initializeLogger(logPrefix, logPath)
+	})
+	return &logWriter
+}
+
 

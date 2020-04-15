@@ -1,9 +1,9 @@
 package connector
 
 import (
-	"cms-utils-go/util"
 	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/happay/cms-utils-go/util"
 	"sync"
 )
 
