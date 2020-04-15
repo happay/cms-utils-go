@@ -9,6 +9,7 @@ import (
 
 var Region = util.GetConfigValue("SSM_PS_RG")
 
+//GetValueFromSecretManager gets the value from the AWS secret manager using the input key
 func GetValueFromSecretManager(key string) (result *secretsmanager.GetSecretValueOutput, err error){
 	sess, err := session.NewSession(secretManagerConfig)
 	if err != nil {

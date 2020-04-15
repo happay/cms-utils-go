@@ -20,7 +20,6 @@ var ssmsvc = ssm.New(sess, aws.NewConfig().WithRegion(Region))
 // GetConfigValue get the environment value using the key.
 // if not found, then fetches it from AWS Parameter Store
 func GetConfigValue(key string) string {
-	//TODO: include AWS Parameter Store
 	value := os.Getenv(key)
 	if value != "" {
 		return value

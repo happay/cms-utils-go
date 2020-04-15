@@ -90,7 +90,7 @@ func (s3Client *S3Client) DownloadFile(outputFilePath, s3key string) (err error)
 	return
 }
 
-// DeleteFile delete the files from the S3 location (s3key)
+// DeleteFile deletes the files from the S3 location (s3key)
 func (s3Client *S3Client) DeleteFiles(s3keys []string) (err error) {
 	for _, s3Key := range s3keys {
 		if _, err = s3Client.s3.DeleteObject(&s3.DeleteObjectInput{
@@ -104,7 +104,7 @@ func (s3Client *S3Client) DeleteFiles(s3keys []string) (err error) {
 	return
 }
 
-// RemoveFile delete a single file from the S3 location
+// RemoveFile deletes a single file from the S3 location
 func (s3Client *S3Client) RemoveFile(key string) (err error) {
 	if key == "" {
 		return

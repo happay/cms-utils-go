@@ -36,7 +36,7 @@ type EmailClient struct {
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
-// SendEmail send the email using the client and with the data specified in the EmailDet
+// SendEmail sends the email using the client and with the data specified in the EmailDet
 func (emailClient *EmailClient) SendEmail(emailDet EmailDet) (err error) {
 	if err = emailDet.CheckIfValidRecipients(); err != nil {
 		return
@@ -88,7 +88,6 @@ func (emailDet EmailDet) createMailerInput() (emailInput *ses.SendEmailInput) {
 
 // CheckIfValidRecipients checks if the recepients have a valid email address, otherwise skip sending mails
 // NOTE: While skipping, it is not raising any error for now, just logs the information
-// TODO: Should we return error to the calling function also
 func (emailDet *EmailDet) CheckIfValidRecipients() (err error) {
 	for _, recipientEmail := range emailDet.Recipient {
 		if !govalidator.IsEmail(recipientEmail) {
