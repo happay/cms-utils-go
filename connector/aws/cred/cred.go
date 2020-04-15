@@ -1,5 +1,4 @@
-package aws
-
+package cred
 
 type Cred struct {
 	Region  string
