@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	connect "github.com/happay/cms-utils-go/connector/aws"
+	"github.com/happay/cms-utils-go/connector/aws/cred"
 	"os"
 )
 
@@ -30,7 +30,7 @@ type QueueMessage struct {
 }
 
 type QueueClient struct {
-	connect.Cred
+	cred.Cred
 	Url    string
 	session *session.Session
 }
