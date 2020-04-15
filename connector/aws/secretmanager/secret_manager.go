@@ -1,4 +1,4 @@
-package connector
+package secretmanager
 
 import (
 	"github.com/aws/aws-sdk-go/aws"

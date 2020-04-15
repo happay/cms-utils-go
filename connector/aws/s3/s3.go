@@ -1,4 +1,4 @@
-package connector
+package s3
 
 import (
 	"bytes"

@@ -1,7 +1,7 @@
 package connector
 
 import (
-	"cms-utils-go/util"
+	"github.com/happay/cms-utils-go/util"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	"gopkg.in/yaml.v2"
