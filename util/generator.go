@@ -7,7 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// This prepends the data with the padding value until the total length is reached
+// LeftPad prepends the data with the padding value until the total length is reached
 func LeftPad(data, padding string, totalLength int) string {
 	currLength := len(data)
 	for i := 0; i < (totalLength-currLength)/len(padding); i++ {
@@ -16,7 +16,7 @@ func LeftPad(data, padding string, totalLength int) string {
 	return data
 }
 
-// This appends the data with the padding value until the total length is reached
+// RightPad appends the data with the padding value until the total length is reached
 func RightPad(data, padding string, totalLength int) string {
 	currLength := len(data)
 	for i := 0; i < (totalLength-currLength)/len(padding); i++ {
@@ -25,7 +25,7 @@ func RightPad(data, padding string, totalLength int) string {
 	return data
 }
 
-// converts the data string into multiples of mod bits and prepends the start index of data
+// StrToHex converts the data string into multiples of mod bits and prepends the start index of data
 func StrToHex(data string, mod int) string {
 	dataLen := len(data)
 	x := dataLen % mod
@@ -41,7 +41,7 @@ func StrToHex(data string, mod int) string {
 	return retData
 }
 
-// create a v4 UUID string without any "-" (hyphen)
+// CreateUUID create a v4 UUID string without any "-" (hyphen)
 func CreateUUID() string {
 	//id := uuid.NewV4().String()
 	id, err := uuid.NewV4()
