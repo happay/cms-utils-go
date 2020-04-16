@@ -112,7 +112,7 @@ func (qClient *QueueClient) Dequeue(numOfPackets ...int64) (queueMessageList []Q
 	return
 }
 
-// Delete Remove the message from the queue after the processing of the event
+// Delete removes the message from the queue after the processing of the event
 // Event is removed from the queue even on failure but enqueued again with the delay
 func (qClient *QueueClient) Delete(msg QueueMessage) (err error) {
 	queue := sqs.New(qClient.session)
@@ -123,7 +123,7 @@ func (qClient *QueueClient) Delete(msg QueueMessage) (err error) {
 	return
 }
 
-// New creates QueueClinet optArgs [AwsKey, AwsSecret]
+// InitQueue creates QueueClinet optArgs [AwsKey, AwsSecret]
 func InitQueue(url string, optArgs ...string) (*QueueClient, error) {
 	var err error
 	awsConfig := &aws.Config{

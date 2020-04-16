@@ -15,7 +15,7 @@ type BaseModel struct {
 	DeletedAt *time.Time `sql:"index" json:"deleted_at,omitempty"`
 }
 
-// can be used for any non-fixed json to map parsing
+// PropertyMap can be used for any non-fixed json to map parsing
 type PropertyMap map[string]interface{}
 
 // =========== Exposed (public) Methods - can be called from external packages ============
@@ -45,7 +45,7 @@ func (pm *PropertyMap) Scan(src interface{}) error {
 	return nil
 }
 
-// will return a nested value using arrays of keys which constitute the path to the nested path
+// GetNestedKeyValue will return a nested value using arrays of keys which constitute the path to the nested path
 // eg. for nested key, "top/middle/end" => ["top", "middle", "end"] should be passed as keys
 // if at any stage a key is not found, it returns empty interface and found as false
 //
