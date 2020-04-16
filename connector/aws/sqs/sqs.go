@@ -1,13 +1,13 @@
 package sqs
 
 import (
-	"fmt"
+	"os"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/happay/cms-utils-go/connector/aws/cred"
-	"os"
 )
 
 var Region = os.Getenv("SSM_PS_RG")
@@ -31,7 +31,7 @@ type QueueMessage struct {
 
 type QueueClient struct {
 	cred.Cred
-	Url    string
+	Url     string
 	session *session.Session
 }
 
@@ -133,11 +133,11 @@ func InitQueue(url string, optArgs ...string) (*QueueClient, error) {
 		awsKey := optArgs[0]
 		awsSecret := optArgs[1]
 		awsConfig.Credentials = credentials.NewStaticCredentials(awsKey, awsSecret, "")
-	} else {
-		err = fmt.Errorf("opt Args length in invalid Formate AwsKey, AwsSecret")
-		return nil, err
 	}
-	//Credentials:
+	//else {
+	//	err = fmt.Errorf("opt Args length in invalid Formate AwsKey, AwsSecret")
+	//	return nil, err
+	//}
 	sess, err := session.NewSession(awsConfig)
 	queueClient := &QueueClient{
 		Url:     url,
