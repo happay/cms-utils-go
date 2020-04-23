@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
 // LeftPad prepends the data with the padding value until the total length is reached
@@ -43,7 +43,6 @@ func StrToHex(data string, mod int) string {
 
 // CreateUUID create a v4 UUID string without any "-" (hyphen)
 func CreateUUID() string {
-	//id := uuid.NewV4().String()
 	id, err := uuid.NewV4()
 	if err != nil {
 		panic(err)

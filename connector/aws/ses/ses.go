@@ -1,6 +1,7 @@
 package ses
 
 import (
+	"cms-utils-go/connector/aws/cred"
 	"errors"
 	"fmt"
 	"github.com/asaskevich/govalidator"
@@ -8,14 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
 	"strings"
 )
 
 // ============ Constants =============
 
 const (
-	CharSet        = "UTF-8" // The character encoding for the email.
+	CharSet = "UTF-8" // The character encoding for the email.
 )
 
 // ============ Structs =============
@@ -30,7 +30,7 @@ type EmailDet struct {
 
 type EmailClient struct {
 	cred.Cred
-	session *session.Session
+	session   *session.Session
 	sesClient *ses.SES
 }
 
@@ -105,7 +105,7 @@ func (emailDet *EmailDet) CheckIfValidRecipients() (err error) {
 }
 
 // New creates new Email Client for SES
-func (emailClient *EmailClient) New() (err error){
+func (emailClient *EmailClient) New() (err error) {
 	var config aws.Config
 	config.Region = aws.String(emailClient.Region)
 	if emailClient.Key != "" && emailClient.Secret != "" {

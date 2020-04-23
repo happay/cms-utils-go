@@ -3,11 +3,11 @@ package sqs
 import (
 	"os"
 
+	"cms-utils-go/connector/aws/cred"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
 )
 
 var Region = os.Getenv("SSM_PS_RG")

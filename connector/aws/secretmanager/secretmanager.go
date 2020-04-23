@@ -1,16 +1,16 @@
 package secretmanager
 
 import (
+	"cms-utils-go/util"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/happay/cms-utils-go/util"
 )
 
 var Region = util.GetConfigValue("SSM_PS_RG")
 
 //GetValueFromSecretManager gets the value from the AWS secret manager using the input key
-func GetValueFromSecretManager(key string) (result *secretsmanager.GetSecretValueOutput, err error){
+func GetValueFromSecretManager(key string) (result *secretsmanager.GetSecretValueOutput, err error) {
 	sess, err := session.NewSession(secretManagerConfig)
 	if err != nil {
 		return
@@ -26,8 +26,7 @@ func GetValueFromSecretManager(key string) (result *secretsmanager.GetSecretValu
 	return
 }
 
-
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 var secretManagerConfig = &aws.Config{
-	Region:      aws.String(Region),
+	Region: aws.String(Region),
 }
