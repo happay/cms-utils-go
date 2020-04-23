@@ -124,8 +124,7 @@ func (qClient *QueueClient) Delete(msg QueueMessage) (err error) {
 }
 
 // InitQueue creates QueueClinet optArgs [AwsKey, AwsSecret]
-func InitQueue(url string, optArgs ...string) (*QueueClient, error) {
-	var err error
+func InitQueue(url string, optArgs ...string) (queueClient *QueueClient, err error) {
 	awsConfig := &aws.Config{
 		Region: aws.String(Region),
 	}
@@ -134,16 +133,12 @@ func InitQueue(url string, optArgs ...string) (*QueueClient, error) {
 		awsSecret := optArgs[1]
 		awsConfig.Credentials = credentials.NewStaticCredentials(awsKey, awsSecret, "")
 	}
-	//else {
-	//	err = fmt.Errorf("opt Args length in invalid Formate AwsKey, AwsSecret")
-	//	return nil, err
-	//}
 	sess, err := session.NewSession(awsConfig)
-	queueClient := &QueueClient{
+	queueClient = &QueueClient{
 		Url:     url,
 		session: sess,
 	}
-	return queueClient, nil
+	return
 }
 
 // =========================== Private Functions =================================
