@@ -1,10 +1,10 @@
 package secretmanager
 
 import (
-	"cms-utils-go/util"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/happay/cms-utils-go/util"
 )
 
 var Region = util.GetConfigValue("SSM_PS_RG")
