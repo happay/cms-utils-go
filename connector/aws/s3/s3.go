@@ -2,12 +2,12 @@ package s3
 
 import (
 	"bytes"
+	"cms-utils-go/connector/aws/cred"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -122,7 +122,7 @@ func (s3Client *S3Client) RemoveFile(key string) (err error) {
 }
 
 // GetPreSignFile generates temp url for the file for the specified duration
-func (s3Client *S3Client)  GetPreSignFile(filePath string, duration time.Duration) (urlStr string, err error) {
+func (s3Client *S3Client) GetPreSignFile(filePath string, duration time.Duration) (urlStr string, err error) {
 
 	// Create S3 service client
 
@@ -157,4 +157,3 @@ func (s3Client *S3Client) New() (err error) {
 }
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
-
