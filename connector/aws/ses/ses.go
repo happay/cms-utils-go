@@ -1,7 +1,7 @@
 package ses
 
 import (
-	"cms-utils-go/connector/aws/cred"
+	"github.com/happay/cms-utils-go/connector/aws/cred"
 	"errors"
 	"fmt"
 	"github.com/asaskevich/govalidator"
