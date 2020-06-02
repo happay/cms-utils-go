@@ -22,7 +22,8 @@ func GetRedisConn(redisAddrKey string) *redis.Client {
 			Password: "", // no password set
 			DB:       0,  // use default DB
 		})
-		pong, err := redisClient.Ping().Result()
+		ctx := redisClient.Context()
+		pong, err := redisClient.Ping(ctx).Result()
 		if err != nil || pong != Pong {
 			reason := fmt.Sprintf("Error while creating Redis connection pool: %s", err)
 			//logger.GetLogger().Println(reason)
