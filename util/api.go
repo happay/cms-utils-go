@@ -8,7 +8,7 @@ import (
 
 // APICall will call api specifed in the path with parameters specified..
 func APICall(method, path string, requestBody PropertyMap,
-	headers map[string]string) (responseCode int, responseBody map[string]string, err error) {
+	headers map[string]string) (responseCode int, responseBody PropertyMap, err error) {
 
 	requestBytes, err := requestBody.Value()
 	if err != nil {
@@ -34,7 +34,6 @@ func APICall(method, path string, requestBody PropertyMap,
 	defer resp.Body.Close()
 
 	responseCode = resp.StatusCode
-	responseBody = make(map[string]string)
 
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	if err != nil {
