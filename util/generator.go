@@ -43,6 +43,7 @@ func StrToHex(data string, mod int) string {
 
 // CreateUUID create a v4 UUID string without any "-" (hyphen)
 func CreateUUID() string {
+	var err error
 	id := uuid.NewV4()
 	if err != nil {
 		panic(err)
