@@ -16,6 +16,12 @@ import (
 var swaggerApiParseOnce sync.Once
 var swaggerApiSpec map[string]interface{}
 
+// ValidateSwagger validate the swagger specs against the request coming from client.
+// It takes the following parameters:
+// 1. requestBodyMap - Request Body coming in request
+// 2. swaggerApiSpecPath - Path of the swagger file
+// 3. requestUrlPath - Request URL
+// 4. requestMethod - Request method like POST, GET etc
 func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, requestUrlPath, requestMethod string) (eventName string, err error) {
 	requestBodyPresent := true
 	if requestBodyMap == nil || len(requestBodyMap) == 0 { // nil or empty request body
@@ -74,6 +80,7 @@ func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, 
 	return
 }
 
+// ============ Internal(private) Methods - can only be called from inside this package ==============
 
 func getSwaggerApiSpec(swaggerApiSpecPath string) map[string]interface{} {
 	swaggerApiParseOnce.Do(func() {

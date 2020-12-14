@@ -13,9 +13,10 @@ const (
 	ReferenceKey = "$refValues" //key to identify if items are fetched by reference
 )
 
-// ConvertSwaggerXMLtoJSON modifies the swagger API spec as per needed by the developer portal
-// for rendering the API details
-func ConvertSwaggerXMLtoJSON(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[string]interface{}, err error) {
+// TransformSwagger modifies the swagger API spec as per needed by the developer portal
+// for rendering the API details. This function will help to transform the swagger yaml file to json.
+// It takes one parameter swaggerApiSpecPath which is the path of swagger file
+func TransformSwagger(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[string]interface{}, err error) {
 	// get the modified version of Swagger API spec
 	modifiedSwaggerSpec, err = getModifiedSwaggerSpec(swaggerApiSpecPath)
 	if err != nil {
@@ -35,6 +36,7 @@ func ConvertSwaggerXMLtoJSON(swaggerApiSpecPath string) (modifiedSwaggerSpec []m
 	return
 }
 
+// ============ Internal(private) Methods - can only be called from inside this package ==============
 
 // modifies the stored swagger API spec (in config) to render it easily on the developer portal UI
 func getModifiedSwaggerSpec(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[string]interface{}, err error) {
@@ -266,6 +268,7 @@ func getExistingTagDetail(modifiedSwaggerSpec []map[string]interface{}, tag stri
 	return
 }
 
+// get description of the tag
 func getTagDescription(tag string, tagsDescriptions []interface{}) (description string) {
 	for _, tagDescription := range tagsDescriptions {
 		tagDescriptionMap := tagDescription.(map[string]interface{})
@@ -284,6 +287,7 @@ func transformStringWithHyphen(description string) (response string) {
 	return
 }
 
+// parse the parameters from swagger file
 func parseParameters(parameters []interface{}) (parametersParsed []interface{}) {
 	parametersParsed = make([]interface{}, len(parameters))
 	for idx, parameterFieldMap := range parameters {
@@ -309,6 +313,7 @@ func parseParameters(parameters []interface{}) (parametersParsed []interface{}) 
 	return
 }
 
+// parse request body from swagger file
 func parseRequestBody(requestBody map[string]interface{}) (requestBodyParsed map[string]interface{}) {
 	requestBodyParsed = make(map[string]interface{})
 	requestBodyParsed["description"] = requestBody["description"]
@@ -336,6 +341,7 @@ func parseRequestBody(requestBody map[string]interface{}) (requestBodyParsed map
 	return
 }
 
+// parse response from swagger file
 func parseResponses(responseBody map[string]interface{}) (responses []map[string]interface{}) {
 	responses = make([]map[string]interface{}, 0)
 	for key, val := range responseBody {
@@ -404,6 +410,7 @@ func parseResponses(responseBody map[string]interface{}) (responses []map[string
 	return
 }
 
+// parse the properties from swagger file
 func parseProperties(properties map[string]interface{}, required []interface{}) (parsedProperty []map[string]interface{}) {
 	parsedProperty = make([]map[string]interface{}, 0)
 	for keyProp, valProp := range properties {
