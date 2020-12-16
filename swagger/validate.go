@@ -22,7 +22,8 @@ var swaggerApiSpec map[string]interface{}
 // 2. swaggerApiSpecPath - Path of the swagger file
 // 3. requestUrlPath - Request URL
 // 4. requestMethod - Request method like POST, GET etc
-func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, requestUrlPath, requestMethod string) (eventName string, err error) {
+// 5. routerGroups - This will include all the router groups service has
+func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, requestUrlPath, requestMethod string, routerGroups ...string) (eventName string, err error) {
 	requestBodyPresent := true
 	if requestBodyMap == nil || len(requestBodyMap) == 0 { // nil or empty request body
 		requestBodyPresent = false // as no request body, so no schema validation required
@@ -37,7 +38,7 @@ func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, 
 	var targetSwaggerApiSpec map[string]interface{}
 	targetSwaggerApiSpec = getSwaggerApiSpec(swaggerApiSpecPath)
 
-	apiRequestBodySchema, eventName, err := getApiRequestBodySchema(requestUrlPath, requestMethod, requestBodyPresent, targetSwaggerApiSpec, swaggerApiSpecPath)
+	apiRequestBodySchema, eventName, err := getApiRequestBodySchema(requestUrlPath, requestMethod, requestBodyPresent, targetSwaggerApiSpec, swaggerApiSpecPath, routerGroups...)
 	if err != nil {
 		reason := fmt.Sprintf("error while fetching API request json schema: %s", err)
 		fmt.Println(reason)
@@ -108,7 +109,7 @@ func initSwaggerApiSpec(swaggerApiSpecPath string) {
 	}
 }
 
-func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPresent bool, swaggerApiSpec map[string]interface{}, swaggerApiSpecPath string) (requestSchemaMap map[string]interface{},
+func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPresent bool, swaggerApiSpec map[string]interface{}, swaggerApiSpecPath string, routerGroups ...string) (requestSchemaMap map[string]interface{},
 	eventName string, err error) {
 	swaggerApiSpecPaths, found := swaggerApiSpec["paths"]
 	if !found {
@@ -132,7 +133,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	// if no exact match is found, checking if any parametric path matches with request URL path
 	if !found {
 		for schemaUrlPath, schemaUrlPathDetail = range swaggerApiSpecPaths.(map[string]interface{}) {
-			if isSameParametricURLPath(schemaUrlPath, requestUrlPath) {
+			if isSameParametricURLPath(schemaUrlPath, requestUrlPath, routerGroups...) {
 				found = true
 				break
 			}
@@ -192,10 +193,15 @@ func isSameURLPath(schemaURLPath, requestURLPath string) bool {
 }
 
 //isSameParametricURLPath checks if the schema's parametric path matches with the request URL path
-func isSameParametricURLPath(schemaURLPath, requestURLPath string) bool {
+func isSameParametricURLPath(schemaURLPath, requestURLPath string, routerGroups ...string) bool {
 	// remove the "/api" from the schemaURLPath before matching with the requestURLPath
-	if !strings.Contains(schemaURLPath, "ops") && !strings.Contains(schemaURLPath, "plugin") &&
-		!strings.Contains(schemaURLPath, "upi") {
+	splitURL := true
+	for _, group := range routerGroups{
+		if strings.Contains(schemaURLPath, group){
+			splitURL = false
+		}
+	}
+	if splitURL == true{
 		schemaURLPath = strings.SplitAfterN(schemaURLPath, "api", 2)[1]
 	}
 	schemaUrlPathParts := strings.Split(schemaURLPath, "/")
