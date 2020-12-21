@@ -1,9 +1,8 @@
-package idempotency
+package util
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/happay/cms-utils-go/util"
 	"github.com/jinzhu/gorm"
 	"net/http"
 )
@@ -15,7 +14,7 @@ const (
 
 
 type Lock struct {
-	util.BaseModel
+	BaseModel
 	ReqId string `gorm:"unique_index:idx_req_id_app_id"`
 	AppId string `gorm:"unique_index:idx_req_id_app_id"`
 }
@@ -24,8 +23,6 @@ type Lock struct {
 func CheckIdempotency(c *gin.Context, noRouteHandler string, db *gorm.DB) (bool, error) {
 	var err error
 	appId, reqId := c.GetHeader(AppID), c.GetHeader(RequestID)
-	fmt.Println(c.HandlerName())
-	fmt.Println(c.Request.Method)
 	if c.HandlerName() == noRouteHandler || c.Request.Method == http.MethodGet {
 		return false, err
 	}
@@ -41,5 +38,3 @@ func CheckIdempotency(c *gin.Context, noRouteHandler string, db *gorm.DB) (bool,
 	}
 	return true, err
 }
-
-
