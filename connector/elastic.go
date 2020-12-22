@@ -7,7 +7,6 @@ import (
 	"gopkg.in/olivere/elastic.v6"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"sync"
 )
 
 // ============ Constants =============
@@ -20,11 +19,9 @@ const (
 // =========== Exposed (public) Methods - can be called from external packages ============
 
 // GetElasticConnection provides a client to elastic search which can be used for insertion, search, removal etc. operations
-func GetElasticSearchConnection(esCredPath, esConfigKey string, indices []string) (*elastic.Client, error) {
+func GetElasticSearchConnection(esCredPath, esConfigKey string, index string) (*elastic.Client, error) {
 	var err error
-	elasticConnectionInit.Do(func() {
-		err = initElasticConnectionAndIndexes(esCredPath, esConfigKey, indices)
-	})
+	err = initElasticConnectionAndIndexes(esCredPath, esConfigKey, index)
 	return elasticClient, err
 }
 
@@ -56,16 +53,30 @@ func PushElasticSearchData(elasticClient *elastic.Client, index, docType string,
 	return
 }
 
+// GetTopElasticSearchData will return the top hit search result
+func GetTopElasticSearchData(elasticClient *elastic.Client, index string, query *elastic.BoolQuery) (topHitSearchResult *elastic.SearchHit, err error) {
+	searchResult, err := GetElasticSearchData(elasticClient, index, query)
+	if err != nil {
+		err = fmt.Errorf("failed to query the data | %s", err)
+		return
+	}
+	if searchResult.TotalHits() != 1 {
+		err = fmt.Errorf("unique data not found | %s", err)
+		return
+	}
+	topHitSearchResult = searchResult.Hits.Hits[0]
+	return
+}
+
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 
 var elasticClient *elastic.Client   // singleton instance of elastic search client
-var elasticConnectionInit sync.Once // "do once" construct for initializing elastic search client
 
 /*
 	initElasticConnectionAndIndexes initializes a global singleton client for elastic search.
 	Additionally, it also checks if the indexes already exists, and creates them otherwise.
 */
-func initElasticConnectionAndIndexes(esCredPath, esConfigKey string, indices []string) (err error) {
+func initElasticConnectionAndIndexes(esCredPath, esConfigKey string, index string) (err error) {
 
 	// read all database config yaml file
 	//DataBaseCredPath := ProjectRootPath() + LocalPathToEnvVars // path to file where common config ENV vars to be used are listed
@@ -98,13 +109,10 @@ func initElasticConnectionAndIndexes(esCredPath, esConfigKey string, indices []s
 		return
 	}
 
-	// fetching index names from ENV vars
-	for _, index := range indices{
-		// checking and creating indexes, if required
-		err = createIndex(index)
-		if err != nil {
-			return
-		}
+	// checking and creating indexes, if required
+	err = createIndex(index)
+	if err != nil {
+		return
 	}
 	return
 }
