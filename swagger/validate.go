@@ -194,16 +194,17 @@ func isSameURLPath(schemaURLPath, requestURLPath string) bool {
 
 //isSameParametricURLPath checks if the schema's parametric path matches with the request URL path
 func isSameParametricURLPath(schemaURLPath, requestURLPath string, routerGroups ...string) bool {
+	// Not Required
 	// remove the "/api" from the schemaURLPath before matching with the requestURLPath
-	splitURL := true
-	for _, group := range routerGroups{
-		if strings.Contains(schemaURLPath, group){
-			splitURL = false
-		}
-	}
-	if splitURL == true{
-		schemaURLPath = strings.SplitAfterN(schemaURLPath, "api", 2)[1]
-	}
+	//splitURL := true
+	//for _, group := range routerGroups{
+	//	if strings.Contains(schemaURLPath, group){
+	//		splitURL = false
+	//	}
+	//}
+	//if splitURL == true{
+	//	schemaURLPath = strings.SplitAfterN(schemaURLPath, "api", 2)[1]
+	//}
 	schemaUrlPathParts := strings.Split(schemaURLPath, "/")
 	requestUrlPathParts := strings.Split(requestURLPath, "/")
 	if len(schemaUrlPathParts) == len(requestUrlPathParts) {

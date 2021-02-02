@@ -24,7 +24,8 @@ func CheckIdempotency(c *gin.Context, noRouteHandler string, db *gorm.DB) (bool,
 	var err error
 	appId, reqId := c.GetHeader(AppID), c.GetHeader(RequestID)
 	if c.HandlerName() == noRouteHandler || c.Request.Method == http.MethodGet {
-		return false, err
+		// If get method, send default True
+		return true, err
 	}
 	lock := &Lock{
 		ReqId: reqId,
