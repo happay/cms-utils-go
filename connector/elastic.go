@@ -1,9 +1,9 @@
 package connector
 
 import (
-	"github.com/happay/cms-utils-go/util"
 	"context"
 	"fmt"
+	"github.com/happay/cms-utils-go/util"
 	"gopkg.in/olivere/elastic.v6"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -13,7 +13,7 @@ import (
 
 // elastic config params
 const (
-	ElasticUrl                 = "url"
+	ElasticUrl = "url"
 )
 
 // =========== Exposed (public) Methods - can be called from external packages ============
@@ -26,7 +26,7 @@ func GetElasticSearchConnection(esCredPath, esConfigKey string, index string) (*
 }
 
 // GetElasticSearchData get the data from elastic search
-func GetElasticSearchData(elasticClient *elastic.Client, index string, query *elastic.BoolQuery) (searchResult *elastic.SearchResult, err error){
+func GetElasticSearchData(elasticClient *elastic.Client, index string, query *elastic.BoolQuery) (searchResult *elastic.SearchResult, err error) {
 	searchResult, err = elasticClient.Search().
 		Index(index).
 		Query(query).
@@ -70,7 +70,7 @@ func GetTopElasticSearchData(elasticClient *elastic.Client, index string, query 
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 
-var elasticClient *elastic.Client   // singleton instance of elastic search client
+var elasticClient *elastic.Client // singleton instance of elastic search client
 
 /*
 	initElasticConnectionAndIndexes initializes a global singleton client for elastic search.
