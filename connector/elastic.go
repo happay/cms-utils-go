@@ -1,7 +1,7 @@
 package connector
 
 import (
-	"cms-utils-go/util"
+	"github.com/happay/cms-utils-go/util"
 	"context"
 	"fmt"
 	"gopkg.in/olivere/elastic.v6"
