@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -73,4 +74,25 @@ func GetNestedKeyValue(keys []string, nestedObject interface{}) (value interface
 	// base case
 	value, found = nestedObject.(map[string]interface{})[keys[0]]
 	return
+}
+
+// ParseEventName will parse the operation id(For each API in Swagger) coming as string and return the event name
+func ParseEventName(name string) string {
+	if strings.Contains(name, "-") {
+		return strings.SplitN(name, "-", 2)[1]
+	}
+	return name
+}
+
+// ReflectInterface will return the underlying concrete value of an interface
+func ReflectInterface(data interface{}) interface{} {
+	switch data.(type) {
+	case map[string]interface{}:
+		return data.(map[string]interface{})
+	case []interface{}:
+		return data.([]interface{})
+	default:
+		fmt.Printf("unknown datatype %T of given interface %v", data, data)
+		return data
+	}
 }

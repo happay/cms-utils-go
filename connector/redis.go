@@ -2,7 +2,7 @@ package connector
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"github.com/happay/cms-utils-go/util"
 	"sync"
 )
