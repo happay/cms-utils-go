@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/happay/cms-utils-go/util"
-	"gopkg.in/olivere/elastic.v6"
+	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 )
