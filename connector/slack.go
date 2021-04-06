@@ -50,7 +50,10 @@ func (sm *SlackMessage) new() (err error) {
 		return
 	}
 
-	sm.Cred.Region = HCMSlackNotifyRegion
+	sm.lambdaClient = &lambda.LambdaClient{}
+	sm.lambdaClient.Cred.Region = HCMSlackNotifyRegion
+	sm.lambdaClient.Cred.Key = sm.Cred.Key
+	sm.lambdaClient.Cred.Secret = sm.Cred.Secret
 
 	if err = sm.lambdaClient.New(); err != nil {
 		err = fmt.Errorf("error while creating lambda client: %s", err)
