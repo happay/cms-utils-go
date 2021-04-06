@@ -16,7 +16,7 @@ type SlackMessage struct {
 	MessageText  string
 	Channel      string
 	ServiceName  string
-	lambdaClient lambda.LambdaClient
+	lambdaClient *lambda.LambdaClient
 }
 
 // SlackMessageLambdaFuncName ...
