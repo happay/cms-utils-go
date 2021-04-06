@@ -25,7 +25,7 @@ const SlackMessageLambdaFuncName = "hcm-slack-notify"
 // HCMSlackNotifyRegion ...
 const HCMSlackNotifyRegion = "ap-south-1"
 
-func (sm SlackMessage) Send() (err error) {
+func (sm *SlackMessage) Send() (err error) {
 	if err = sm.new(); err != nil {
 		return
 	}
@@ -44,7 +44,7 @@ func (sm SlackMessage) Send() (err error) {
 	return
 }
 
-func (sm SlackMessage) new() (err error) {
+func (sm *SlackMessage) new() (err error) {
 	if sm.Cred.Key == "" || sm.Cred.Secret == "" {
 		err = fmt.Errorf("Empty aws key or secret")
 		return
