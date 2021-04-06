@@ -27,6 +27,12 @@ func (lambdaClient *LambdaClient) InvokeAWSLambdaFunc(functionName string, reque
 		return
 	}
 
+	if lambdaClient.lambda == nil {
+		if err = lambdaClient.New(); err != nil {
+			return
+		}
+	}
+
 	result, err = lambdaClient.lambda.Invoke(&lambda.InvokeInput{FunctionName: aws.String(functionName), Payload: payload})
 	if err != nil {
 		err = fmt.Errorf("error while invoking lambda func: %s", err)
