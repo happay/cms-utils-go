@@ -45,10 +45,10 @@ func (sm *SlackMessage) Send() (err error) {
 }
 
 func (sm *SlackMessage) new() (err error) {
-	if sm.Cred.Key == "" || sm.Cred.Secret == "" {
-		err = fmt.Errorf("Empty aws key or secret")
-		return
-	}
+	// if sm.Cred.Key == "" || sm.Cred.Secret == "" {
+	// 	err = fmt.Errorf("Empty aws key or secret")
+	// 	return
+	// }
 
 	sm.lambdaClient = &lambda.LambdaClient{}
 	sm.lambdaClient.Cred.Region = HCMSlackNotifyRegion
