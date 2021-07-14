@@ -1,7 +1,7 @@
 package ses
 
 import (
-	"github.com/happay/cms-utils-go/connector/aws/cred"
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/asaskevich/govalidator"
@@ -9,6 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/happay/cms-utils-go/connector/aws/cred"
+	"gopkg.in/gomail.v2"
 	"strings"
 )
 
@@ -21,11 +23,12 @@ const (
 // ============ Structs =============
 
 type EmailDet struct {
-	Sender    string   `json:"sender"`
-	Recipient []string `json:"recipient"`
-	Subject   string   `json:"subject"`
-	HtmlBody  string   `json:"htmlbody"`
-	TextBody  string   `json:"textbody"`
+	Sender      string   `json:"sender"`
+	Recipient   []string `json:"recipient"`
+	Subject     string   `json:"subject"`
+	HtmlBody    string   `json:"htmlbody"`
+	TextBody    string   `json:"textbody"`
+	Attachments []string `json:"attachments"`
 }
 
 type EmailClient struct {
@@ -121,3 +124,41 @@ func (emailClient *EmailClient) New() (err error) {
 	emailClient.sesClient = ses.New(sess)
 	return
 }
+
+// SendEmailWithAttachments sends email with attachments
+func (emailClient *EmailClient) SendEmailWithAttachments(emailDet EmailDet) (err error) {
+	if err = emailDet.CheckIfValidRecipients(); err != nil {
+		return
+	}
+	emailInput := emailDet.createRawInput()
+	_, err = emailClient.sesClient.SendRawEmail(emailInput)
+	return
+}
+
+func (emailDet EmailDet) createRawInput() (emailInput *ses.SendRawEmailInput) {
+	recipients := make([]*string, len(emailDet.Recipient))
+	for idx, recipientEmail := range emailDet.Recipient {
+		recipients[idx] = aws.String(recipientEmail)
+	}
+
+	msg := gomail.NewMessage()
+	msg.SetHeader("From", emailDet.Sender)
+	msg.SetHeader("To", strings.Join(emailDet.Recipient, ","))
+	msg.SetHeader("Subject", emailDet.Subject)
+	msg.SetBody("text/html", emailDet.HtmlBody)
+	for _, fileLocation := range emailDet.Attachments {
+		msg.Attach(fileLocation)
+	}
+
+	var emailRaw bytes.Buffer
+	msg.WriteTo(&emailRaw)
+
+	message := ses.RawMessage{Data: emailRaw.Bytes()}
+	emailInput = &ses.SendRawEmailInput{
+		Source:       aws.String(emailDet.Sender),
+		Destinations: recipients,
+		RawMessage:   &message,
+	}
+	return
+}
+
