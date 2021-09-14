@@ -52,31 +52,31 @@ func GetPgConn(dbCredPath string, pgConfigKey string) *gorm.DB {
 		//read database yaml configuration file
 		if bytes, err = ioutil.ReadFile(dbCredPath); err != nil {
 			err = fmt.Errorf("file read error %s: %s", dbCredPath, err)
-			//logger.GetLogger().Println(err)
+			fmt.Println(err.Error())
 			return
 		}
 		// map the yaml file dbConfigs map object
 		dbConfigs := make(map[string]map[string]string)
 		if err = yaml.Unmarshal(bytes, &dbConfigs); err != nil {
 			err = fmt.Errorf("error while parsing the database configuration: %s", err)
-			//logger.GetLogger().Println(err)
+			fmt.Println(err.Error())
 			return
 		}
 		// get postgres database configuration from the dbConfigs
 		if pgDbConfigs, found := dbConfigs[pgConfigKey]; !found {
 			err = fmt.Errorf("%s database config not found on yaml file: %s", pgConfigKey, dbCredPath)
-			//logger.GetLogger().Println(err)
+			fmt.Println(err.Error())
 			return
 		} else {
 			pgConnStr := createPgConnString(pgDbConfigs)
 			if db, err = gorm.Open("postgres", pgConnStr); err != nil {
 				err = fmt.Errorf("initialize postgres db connection failed: %s", err)
-				//logger.GetLogger().Println(err)
+				fmt.Println(err.Error())
 				return
 			}
 			if db, err = setPgConnLimits(db, pgDbConfigs); err != nil {
 				err = fmt.Errorf("error setting connection limits: %s", err)
-				//logger.GetLogger().Println(err)
+				fmt.Println(err.Error())
 				return
 			}
 			db.BlockGlobalUpdate(true)
