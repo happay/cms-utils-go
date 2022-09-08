@@ -133,7 +133,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	// if no exact match is found, checking if any parametric path matches with request URL path
 	if !found {
 		for schemaUrlPath, schemaUrlPathDetail = range swaggerApiSpecPaths.(map[string]interface{}) {
-			if isSameParametricURLPath(schemaUrlPath, requestUrlPath, routerGroups...) {
+			if isSameHttpMethod(schemaUrlPathDetail, requestMethod) && isSameParametricURLPath(schemaUrlPath, requestUrlPath, routerGroups...) {
 				found = true
 				break
 			}
@@ -185,14 +185,23 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	return
 }
 
-//isSameURLPath checks if the schema's path exactly matches with the request URL path
+// isSameHttpMethod checks if method in schema's url path detail matches with the requested method.
+func isSameHttpMethod(schemaUrlPathDetail interface{}, requestMethod string) bool {
+	_, found := schemaUrlPathDetail.(map[string]interface{})[strings.ToLower(requestMethod)]
+	if !found {
+		return false
+	}
+	return true
+}
+
+// isSameURLPath checks if the schema's path exactly matches with the request URL path
 func isSameURLPath(schemaURLPath, requestURLPath string) bool {
 	// remove the "/api" from the schemaURKPath before matching with the requestURLPath
 	//schemaURLPath = strings.SplitAfterN(schemaURLPath, "api", 2)[1]
 	return schemaURLPath == requestURLPath
 }
 
-//isSameParametricURLPath checks if the schema's parametric path matches with the request URL path
+// isSameParametricURLPath checks if the schema's parametric path matches with the request URL path
 func isSameParametricURLPath(schemaURLPath, requestURLPath string, routerGroups ...string) bool {
 	// Not Required
 	// remove the "/api" from the schemaURLPath before matching with the requestURLPath
