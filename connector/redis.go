@@ -1,8 +1,9 @@
 package connector
 
 import (
+	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis"
 	"github.com/happay/cms-utils-go/util"
 	"sync"
 )
@@ -22,7 +23,7 @@ func GetRedisConn(redisAddrKey string) *redis.Client {
 			Password: "", // no password set
 			DB:       0,  // use default DB
 		})
-		ctx := redisClient.Context()
+		ctx := context.Background()
 		pong, err := redisClient.Ping(ctx).Result()
 		if err != nil || pong != Pong {
 			reason := fmt.Sprintf("Error while creating Redis connection pool: %s", err)

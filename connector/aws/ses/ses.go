@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/go-gomail/gomail"
 	"github.com/happay/cms-utils-go/connector/aws/cred"
-	"gopkg.in/gomail.v2"
 	"strings"
 )
 
@@ -161,4 +161,3 @@ func (emailDet EmailDet) createRawInput() (emailInput *ses.SendRawEmailInput) {
 	}
 	return
 }
-
