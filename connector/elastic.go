@@ -2,11 +2,13 @@ package connector
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 )
 
 // ============ Constants =============
@@ -15,6 +17,15 @@ import (
 const (
 	ElasticUrl = "url"
 )
+
+type Configuration struct {
+	Settings struct {
+		Index struct {
+			NumberOfShards   int `json:"number_of_shards"`
+			NumberOfReplicas int `json:"number_of_replicas"`
+		} `json:"index"`
+	} `json:"settings"`
+}
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
@@ -73,8 +84,8 @@ func GetTopElasticSearchData(elasticClient *elastic.Client, index string, query 
 var elasticClient *elastic.Client // singleton instance of elastic search client
 
 /*
-	initElasticConnectionAndIndexes initializes a global singleton client for elastic search.
-	Additionally, it also checks if the indexes already exists, and creates them otherwise.
+initElasticConnectionAndIndexes initializes a global singleton client for elastic search.
+Additionally, it also checks if the indexes already exists, and creates them otherwise.
 */
 func initElasticConnectionAndIndexes(esCredPath, esConfigKey string, index string) (err error) {
 
@@ -152,4 +163,62 @@ func createIndex(indexName string) (err error) {
 		return
 	}
 	return
+}
+
+func createIndexWithShardManagement(indexName string, shardsCount int, replicasCount int) (err error) {
+
+	// check if the index already exist
+	index, err := elasticClient.Search(indexName).Do(context.Background())
+	if err != nil { // index doesn't exist
+		reason := fmt.Sprintf("error checking if %s index already exist: %s", indexName, err)
+		fmt.Println(reason)
+	} else if index.Shards.Successful < index.Shards.Total { // index already exist, but some shards are unavailable
+		reason := fmt.Sprintf("%s index already exist, but only %d shards are available out of %d", indexName,
+			index.Shards.Successful, index.Shards.Total)
+		fmt.Println(reason)
+		//	TODO: Should we raise a panic here?
+	} else {
+		reason := fmt.Sprintf("%s index already exist, so skipping creation", indexName)
+		fmt.Println(reason)
+		return
+	}
+	// as index is non-existent, so creating it
+	var result *elastic.IndicesCreateResult
+	var config1 Configuration
+	config1.Settings.Index.NumberOfShards = shardsCount
+	config1.Settings.Index.NumberOfReplicas = replicasCount
+
+	mappingbyte, err := json.Marshal(config1)
+	if err != nil {
+		fmt.Println("error in marshalling")
+	}
+	mappingstring := string(mappingbyte)
+
+	_, err = elasticClient.CreateIndex(indexName).Body(mappingstring).Do(context.Background())
+	if err != nil {
+		err = fmt.Errorf("%s index creation fails: %s", indexName, err)
+		fmt.Println(err)
+		return
+	}
+
+	// checking if the index creating request is successfully acknowledged by elastic search
+	if result.Acknowledged == false {
+		err = fmt.Errorf("%s index creation is not acknowledged by elastic search", indexName)
+		fmt.Println(err)
+		return
+	}
+	return
+}
+
+func IfIndexExists(indexName string) bool {
+	exists, err := elasticClient.IndexExists(indexName).Do(context.Background())
+	if err != nil {
+		fmt.Println(err)
+	}
+	if exists {
+		return true
+	} else {
+		return false
+	}
+
 }
