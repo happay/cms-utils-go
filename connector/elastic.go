@@ -165,7 +165,8 @@ func createIndex(indexName string) (err error) {
 	return
 }
 
-func createIndexWithShardManagement(indexName string, shardsCount int, replicasCount int) (err error) {
+// createIndexWithShardManagement checks if the indexName is already exists, and create it otherwise with given count of shards and replicas
+func CreateIndexWithShardManagement(indexName string, shardsCount int, replicasCount int) (err error) {
 
 	// check if the index already exist
 	index, err := elasticClient.Search(indexName).Do(context.Background())
@@ -184,17 +185,18 @@ func createIndexWithShardManagement(indexName string, shardsCount int, replicasC
 	}
 	// as index is non-existent, so creating it
 	var result *elastic.IndicesCreateResult
-	var config1 Configuration
-	config1.Settings.Index.NumberOfShards = shardsCount
-	config1.Settings.Index.NumberOfReplicas = replicasCount
+	var config Configuration
+	config.Settings.Index.NumberOfShards = shardsCount
+	config.Settings.Index.NumberOfReplicas = replicasCount
 
-	mappingbyte, err := json.Marshal(config1)
+	requestBody, err := json.Marshal(config)
 	if err != nil {
-		fmt.Println("error in marshalling")
+		err = fmt.Errorf("error marshalling shard configuration for index %s | %s", indexName, err)
+		fmt.Println(err)
+		return
 	}
-	mappingstring := string(mappingbyte)
 
-	_, err = elasticClient.CreateIndex(indexName).Body(mappingstring).Do(context.Background())
+	result, err = elasticClient.CreateIndex(indexName).Body(string(requestBody)).Do(context.Background())
 	if err != nil {
 		err = fmt.Errorf("%s index creation fails: %s", indexName, err)
 		fmt.Println(err)
@@ -210,15 +212,11 @@ func createIndexWithShardManagement(indexName string, shardsCount int, replicasC
 	return
 }
 
-func IfIndexExists(indexName string) bool {
+func IndexExists(indexName string) bool {
 	exists, err := elasticClient.IndexExists(indexName).Do(context.Background())
 	if err != nil {
-		fmt.Println(err)
+		reason := fmt.Sprintf("error checking if %s index already exist: %s", indexName, err)
+		fmt.Println(reason)
 	}
-	if exists {
-		return true
-	} else {
-		return false
-	}
-
+	return exists
 }
