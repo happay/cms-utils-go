@@ -169,18 +169,7 @@ func createIndex(indexName string) (err error) {
 func CreateIndexWithShardManagement(indexName string, shardsCount int, replicasCount int) (err error) {
 
 	// check if the index already exist
-	index, err := elasticClient.Search(indexName).Do(context.Background())
-	if err != nil { // index doesn't exist
-		reason := fmt.Sprintf("error checking if %s index already exist: %s", indexName, err)
-		fmt.Println(reason)
-	} else if index.Shards.Successful < index.Shards.Total { // index already exist, but some shards are unavailable
-		reason := fmt.Sprintf("%s index already exist, but only %d shards are available out of %d", indexName,
-			index.Shards.Successful, index.Shards.Total)
-		fmt.Println(reason)
-		//	TODO: Should we raise a panic here?
-	} else {
-		reason := fmt.Sprintf("%s index already exist, so skipping creation", indexName)
-		fmt.Println(reason)
+	if IndexExists(indexName) {
 		return
 	}
 	// as index is non-existent, so creating it
