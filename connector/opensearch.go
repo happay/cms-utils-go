@@ -105,7 +105,7 @@ func CreateIndexWithShardManagement(indexName string, shardsCount int, replicasC
 
 	// checking if the index creating request is successfully acknowledged by elastic search
 	if result.Acknowledged == false {
-		err = fmt.Errorf("%s index creation is not acknowledged by elastic search", indexName)
+		err = fmt.Errorf("%s index creation is not acknowledged by open search", indexName)
 		fmt.Println(err)
 		return
 	}
