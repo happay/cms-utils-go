@@ -2,7 +2,6 @@ package connector
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
@@ -17,15 +16,6 @@ import (
 const (
 	ElasticUrl = "url"
 )
-
-type Configuration struct {
-	Settings struct {
-		Index struct {
-			NumberOfShards   int `json:"number_of_shards"`
-			NumberOfReplicas int `json:"number_of_replicas"`
-		} `json:"index"`
-	} `json:"settings"`
-}
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
@@ -163,49 +153,4 @@ func createIndex(indexName string) (err error) {
 		return
 	}
 	return
-}
-
-// createIndexWithShardManagement checks if the indexName is already exists, and create it otherwise with given count of shards and replicas
-func CreateIndexWithShardManagement(indexName string, shardsCount int, replicasCount int) (err error) {
-
-	// check if the index already exist
-	if IndexExists(indexName) {
-		return
-	}
-	// as index is non-existent, so creating it
-	var result *elastic.IndicesCreateResult
-	var config Configuration
-	config.Settings.Index.NumberOfShards = shardsCount
-	config.Settings.Index.NumberOfReplicas = replicasCount
-
-	requestBody, err := json.Marshal(config)
-	if err != nil {
-		err = fmt.Errorf("error marshalling shard configuration for index %s | %s", indexName, err)
-		fmt.Println(err)
-		return
-	}
-
-	result, err = elasticClient.CreateIndex(indexName).Body(string(requestBody)).Do(context.Background())
-	if err != nil {
-		err = fmt.Errorf("%s index creation fails: %s", indexName, err)
-		fmt.Println(err)
-		return
-	}
-
-	// checking if the index creating request is successfully acknowledged by elastic search
-	if result.Acknowledged == false {
-		err = fmt.Errorf("%s index creation is not acknowledged by elastic search", indexName)
-		fmt.Println(err)
-		return
-	}
-	return
-}
-
-func IndexExists(indexName string) bool {
-	exists, err := elasticClient.IndexExists(indexName).Do(context.Background())
-	if err != nil {
-		reason := fmt.Sprintf("error checking if %s index already exist: %s", indexName, err)
-		fmt.Println(reason)
-	}
-	return exists
 }
