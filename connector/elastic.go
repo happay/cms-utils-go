@@ -3,10 +3,11 @@ package connector
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
-	"io/ioutil"
 )
 
 // ============ Constants =============
@@ -73,8 +74,8 @@ func GetTopElasticSearchData(elasticClient *elastic.Client, index string, query 
 var elasticClient *elastic.Client // singleton instance of elastic search client
 
 /*
-	initElasticConnectionAndIndexes initializes a global singleton client for elastic search.
-	Additionally, it also checks if the indexes already exists, and creates them otherwise.
+initElasticConnectionAndIndexes initializes a global singleton client for elastic search.
+Additionally, it also checks if the indexes already exists, and creates them otherwise.
 */
 func initElasticConnectionAndIndexes(esCredPath, esConfigKey string, index string) (err error) {
 
