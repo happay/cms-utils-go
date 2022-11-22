@@ -87,9 +87,9 @@ func isPhoneValid(s string) bool {
 	phoneRegex := regexp.MustCompile(`^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\\/]?){10,})(?:[\-\.\ \\\/]?(?:#|ext\.?|extension|x)[\-\.\ \\\/]?(\d+))?$`)
 	return phoneRegex.MatchString(s)
 }
-func verifyPassword(s string) (sixOrMore, number, upper, special,lower bool) {
+func verifyPassword(s string) bool {
     letters := 0
-	
+	var sixOrMore, number, upper, special,lower bool
     for _, c := range s {
 		letters++
         switch {
@@ -111,7 +111,7 @@ func verifyPassword(s string) (sixOrMore, number, upper, special,lower bool) {
     }
 	
     sixOrMore = letters >= 6
-    return
+    return sixOrMore && number && upper && special && lower
 }
 func isNameValid(s string) bool {
 	nameRegex := regexp.MustCompile("^[A-Za-z][A-Za-z0-9_]{0,}$")
@@ -131,9 +131,9 @@ func Signup(admin Admin) (error, Admin) {
 	if !isPhoneValid(admin.Phone) {
 		return &InvalidPhoneError{}, admin
 	}
-	sixOrMore,number,upper,special,lower:=verifyPassword(admin.Password)
+	
 
-	if !(sixOrMore && number && upper && special && lower) {
+	if !(verifyPassword(admin.Password)) {
 		return &InvalidPasswordError{}, admin
 	}
 	if !isNameValid(admin.FirstName) {
