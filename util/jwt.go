@@ -53,20 +53,20 @@ func (m *PhoneAlreadyPresentError) Error() string {
 	return "User with same phone already exists"
 }
 
-func Signup(admin Admin, db *gorm.DB) (error,*gorm.DB)  {
+func Signup(admin Admin, db *gorm.DB) (error,Admin)  {
 
 	var admins []Admin
 	var Admins []Admin
 
 	_, err := govalidator.ValidateStruct(admin)
 	if err != nil {
-		return err,nil
+		return err,admin
 	}
 
 	Encrypted_Password, err := HashPassword(admin.Password)
 	if err != nil {
 
-		return err,nil
+		return err,admin
 	}
 	admin.Password = Encrypted_Password
 
@@ -75,7 +75,7 @@ func Signup(admin Admin, db *gorm.DB) (error,*gorm.DB)  {
 	for i := range admins {
 		if admin.Email == admins[i].Email {
 
-			return &EmailAlreadyPresentError{},nil
+			return &EmailAlreadyPresentError{},admin
 		}
 	}
 
@@ -84,7 +84,7 @@ func Signup(admin Admin, db *gorm.DB) (error,*gorm.DB)  {
 	for i := range Admins {
 		if admin.Phone == Admins[i].Phone {
 
-			return &PhoneAlreadyPresentError{},nil
+			return &PhoneAlreadyPresentError{},admin
 		}
 	}
 
