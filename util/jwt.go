@@ -1,6 +1,7 @@
 package util
 
 import (
+	
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -9,18 +10,20 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 
+	"regexp"
+    "unicode"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Admin struct {
 	gorm.Model
 
-	FirstName  string `json:"firstName" valid:"required~FirstName is required , length(1|64)~Invalid FirstName"`
+	FirstName  string `json:"firstName" valid:"required~FirstName is required "`
 	MiddleName string `json:"middleName" `
-	LastName   string `json:"lastName" valid:"required~LastName is required , length(1|64)~Invalid LastName"`
-	Email      string `json:"email" valid:"required~Email is required , length(1|20)~Invalid Email"`
-	Password   string `json:"password" valid:"required~Password is required , length(1|40)~Empty Password"`
-	Phone      string `json:"phone" valid:"required~Phone is required , length(1|15)~Invalid Phone"`
+	LastName   string `json:"lastName" valid:"required~LastName is required "`
+	Email      string `json:"email" valid:"required~Email is required "`
+	Password   string `json:"password" valid:"required~Password is required "`
+	Phone      string `json:"phone" valid:"required~Phone is required "`
 }
 
 func AutoMigrate(db *gorm.DB) {
@@ -31,6 +34,7 @@ func AutoMigrate(db *gorm.DB) {
 	}
 }
 
+
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	return string(bytes), err
@@ -39,67 +43,121 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
-
-type EmailAlreadyPresentError struct {
+func isEmailValid(e string) bool {
+	emailRegex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return emailRegex.MatchString(e)
 }
 
-func (m *EmailAlreadyPresentError) Error() string {
-	return "User with same email already exists"
+type InvalidEmailError struct{}
+
+func (m *InvalidEmailError) Error() string {
+	return "Invalid Email"
 }
 
-type PhoneAlreadyPresentError struct{}
+type InvalidPasswordError struct{}
 
-func (m *PhoneAlreadyPresentError) Error() string {
-	return "User with same phone already exists"
+func (m *InvalidPasswordError) Error() string {
+	return "Invalid Password"
 }
 
-func Signup(admin Admin, db *gorm.DB) (error,Admin)  {
+type InvalidPhoneError struct{}
 
-	var admins []Admin
-	var Admins []Admin
+func (m *InvalidPhoneError) Error() string {
+	return "Invalid Phone number"
+}
+
+type InvalidFirstnameError struct{}
+
+func (m *InvalidFirstnameError) Error() string {
+	return "Invalid Firstname"
+}
+
+type InvalidLastnameError struct{}
+
+func (m *InvalidLastnameError) Error() string {
+	return "Invalid Lastname"
+}
+
+type InvalidMiddlenameError struct{}
+
+func (m *InvalidMiddlenameError) Error() string {
+	return "Invalid Middlename"
+}
+func isPhoneValid(s string) bool {
+	phoneRegex := regexp.MustCompile(`^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\\/]?){10,})(?:[\-\.\ \\\/]?(?:#|ext\.?|extension|x)[\-\.\ \\\/]?(\d+))?$`)
+	return phoneRegex.MatchString(s)
+}
+func verifyPassword(s string) (sixOrMore, number, upper, special,lower bool) {
+    letters := 0
+	
+    for _, c := range s {
+		letters++
+        switch {
+        case unicode.IsNumber(c):
+            number = true
+        case unicode.IsUpper(c):
+            upper = true
+            
+        case unicode.IsPunct(c) || unicode.IsSymbol(c):
+            special = true
+        
+            
+		case unicode.IsLower(c):
+			lower=true
+
+        default:
+            //return false, false, false, false
+        }
+    }
+	
+    sixOrMore = letters >= 6
+    return
+}
+func isNameValid(s string) bool {
+	nameRegex := regexp.MustCompile("^[A-Za-z][A-Za-z0-9_]{0,}$")
+	return nameRegex.MatchString(s)
+}
+
+func Signup(admin Admin) (error, Admin) {
 
 	_, err := govalidator.ValidateStruct(admin)
 	if err != nil {
-		return err,admin
+		return err, admin
 	}
-
-	Encrypted_Password, err := HashPassword(admin.Password)
-	if err != nil {
-
-		return err,admin
+ 
+	if !isEmailValid(admin.Email) {
+		return &InvalidEmailError{}, admin
 	}
-	admin.Password = Encrypted_Password
+	if !isPhoneValid(admin.Phone) {
+		return &InvalidPhoneError{}, admin
+	}
+	sixOrMore,number,upper,special,lower:=verifyPassword(admin.Password)
 
-	db.Where("Email= ?", &admin.Email).Find(&admins)
-
-	for i := range admins {
-		if admin.Email == admins[i].Email {
-
-			return &EmailAlreadyPresentError{},admin
+	if !(sixOrMore && number && upper && special && lower) {
+		return &InvalidPasswordError{}, admin
+	}
+	if !isNameValid(admin.FirstName) {
+		return &InvalidFirstnameError{}, admin
+	}
+	if !isNameValid(admin.LastName) {
+		return &InvalidLastnameError{}, admin
+	}
+	if admin.MiddleName != "" {
+		if !isNameValid(admin.MiddleName) {
+			return &InvalidMiddlenameError{}, admin
 		}
 	}
 
-	db.Where("Phone=?", &admin.Phone).Find(&Admins)
-
-	for i := range Admins {
-		if admin.Phone == Admins[i].Phone {
-
-			return &PhoneAlreadyPresentError{},admin
-		}
-	}
-
-	db.Create(&admin)
-
-	return nil,admin
+	return nil, admin
 
 }
 
 type WrongPasswordError struct{}
 
 func (m *WrongPasswordError) Error() string {
-	return "Invalid Password"
+	return "Wrong Password"
 }
-func Login(email, password string, db *gorm.DB) (error, map[string]string) {
+func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[string]string) {
 
 	result := make(map[string]string)
 	var db_Admin Admin
@@ -115,7 +173,7 @@ func Login(email, password string, db *gorm.DB) (error, map[string]string) {
 		return &WrongPasswordError{}, nil
 	}
 
-	expirationTime := time.Now().Add(time.Minute * 30)
+	expirationTime := time.Now().Add(time.Minute * time.Duration(expiry_time))
 	claims := &Claims{
 		Email:    email,
 		Password: password,
