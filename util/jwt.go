@@ -173,8 +173,17 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 		return &WrongPasswordError{}, nil
 	}
 
+	expirationTime := time.Now().Add(time.Minute * time.Duration(expiry_time))
+	claimsForFiniteTime := &Claims{
+		Email:    email,
+		Password: password,
+		ID:       db_Admin.ID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
 	
-	claims := &Claims{
+	claimsForInfiniteTime := &Claims{
 		Email:    email,
 		Password: password,
 		ID:       db_Admin.ID,
@@ -182,7 +191,12 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 			
 		},
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	var token *jwt.Token
+	if expiry_time!=0{
+		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claimsForFiniteTime)
+	}else{
+		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claimsForInfiniteTime)
+	}
 	tokenString, err := token.SignedString(jwt_key)
 	if err != nil {
 
@@ -190,7 +204,12 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 	}
 
 	result["token"] = tokenString
-	result["expires"] = "Infinte"
+	if expiry_time!=0{
+		result["expires"] = expirationTime.String()
+	}else
+	{
+		result["expires"] = "Infinite"
+	}
 
 	return nil, result
 }
