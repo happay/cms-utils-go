@@ -173,13 +173,13 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 		return &WrongPasswordError{}, nil
 	}
 
-	expirationTime := time.Now().Add(time.Minute * time.Duration(expiry_time))
+	
 	claims := &Claims{
 		Email:    email,
 		Password: password,
 		ID:       db_Admin.ID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+			
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -190,7 +190,7 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 	}
 
 	result["token"] = tokenString
-	result["expires"] = expirationTime.String()
+	result["expires"] = "Infinte"
 
 	return nil, result
 }
@@ -201,5 +201,40 @@ type Claims struct {
 	ID       uint   `json:"id"`
 	jwt.StandardClaims
 }
-
+type TokenNilError struct{}
+func (m *TokenNilError) Error() string{
+  return "Token is nil."
+}
+type TokenInvalidError struct{}
+func (m *TokenInvalidError) Error() string{
+  return "Token is Invalid."
+}
 var jwt_key = []byte("secret_key")
+func TokenValidation(tokenStr string) (bool,error){
+	claims := &Claims{}
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) { return jwt_key, nil })
+
+	if tkn == nil {
+		
+		return false,&TokenNilError{}
+	}
+
+	
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			
+			return false,err
+		} else {
+			
+			return false,err
+		}
+	}
+
+	if !tkn.Valid {
+       
+		return false,&TokenInvalidError{}
+	}
+	return true,nil
+}
+
