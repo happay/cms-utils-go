@@ -1,7 +1,6 @@
 package util
 
 import (
-	
 	"time"
 
 	"github.com/asaskevich/govalidator"
@@ -11,7 +10,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 
 	"regexp"
-    "unicode"
+	"unicode"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,7 +33,6 @@ func AutoMigrate(db *gorm.DB) {
 		panic(err)
 	}
 }
-
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
@@ -88,67 +87,68 @@ func isPhoneValid(s string) bool {
 	return phoneRegex.MatchString(s)
 }
 func verifyPassword(s string) bool {
-    letters := 0
-	var sixOrMore, number, upper, special,lower bool
-    for _, c := range s {
+	letters := 0
+	var sixOrMore, number, upper, special, lower bool
+	for _, c := range s {
 		letters++
-        switch {
-        case unicode.IsNumber(c):
-            number = true
-        case unicode.IsUpper(c):
-            upper = true
-            
-        case unicode.IsPunct(c) || unicode.IsSymbol(c):
-            special = true
-        
-            
-		case unicode.IsLower(c):
-			lower=true
+		switch {
+		case unicode.IsNumber(c):
+			number = true
+		case unicode.IsUpper(c):
+			upper = true
 
-        default:
-            //return false, false, false, false
-        }
-    }
-	
-    sixOrMore = letters >= 6
-    return sixOrMore && number && upper && special && lower
+		case unicode.IsPunct(c) || unicode.IsSymbol(c):
+			special = true
+
+		case unicode.IsLower(c):
+			lower = true
+
+		default:
+			//return false, false, false, false
+		}
+	}
+
+	sixOrMore = letters >= 6
+	return sixOrMore && number && upper && special && lower
 }
 func isNameValid(s string) bool {
 	nameRegex := regexp.MustCompile("^[A-Za-z][A-Za-z0-9_]{0,}$")
 	return nameRegex.MatchString(s)
 }
 
-func Signup(admin Admin) (error, Admin) {
+func Signup(admin Admin, db *gorm.DB,expiry_time int) (error,Admin,error,map[string]string) {
 
 	_, err := govalidator.ValidateStruct(admin)
 	if err != nil {
-		return err, admin
+		return err, admin,nil,nil
 	}
- 
+
 	if !isEmailValid(admin.Email) {
-		return &InvalidEmailError{}, admin
+		return &InvalidEmailError{}, admin,nil,nil
 	}
 	if !isPhoneValid(admin.Phone) {
-		return &InvalidPhoneError{}, admin
+		return &InvalidPhoneError{}, admin,nil,nil
 	}
-	
 
 	if !(verifyPassword(admin.Password)) {
-		return &InvalidPasswordError{}, admin
+		return &InvalidPasswordError{}, admin,nil,nil
 	}
 	if !isNameValid(admin.FirstName) {
-		return &InvalidFirstnameError{}, admin
+		return &InvalidFirstnameError{}, admin,nil,nil
 	}
 	if !isNameValid(admin.LastName) {
-		return &InvalidLastnameError{}, admin
+		return &InvalidLastnameError{}, admin,nil,nil
 	}
 	if admin.MiddleName != "" {
 		if !isNameValid(admin.MiddleName) {
-			return &InvalidMiddlenameError{}, admin
+			return &InvalidMiddlenameError{}, admin,nil,nil
 		}
 	}
-
-	return nil, admin
+    err,token:=Login(admin.Email,admin.Password,db,expiry_time)
+	if err!=nil{
+		return nil,admin,err,nil
+	}
+	return nil, admin,nil,token
 
 }
 
@@ -182,19 +182,19 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
-	
+
 	claimsForInfiniteTime := &Claims{
 		Email:    email,
 		Password: password,
 		ID:       db_Admin.ID,
 		StandardClaims: jwt.StandardClaims{
-			
+			ExpiresAt: 0,
 		},
 	}
 	var token *jwt.Token
-	if expiry_time!=0{
+	if expiry_time != 0 {
 		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claimsForFiniteTime)
-	}else{
+	} else {
 		token = jwt.NewWithClaims(jwt.SigningMethodHS256, claimsForInfiniteTime)
 	}
 	tokenString, err := token.SignedString(jwt_key)
@@ -204,10 +204,9 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 	}
 
 	result["token"] = tokenString
-	if expiry_time!=0{
+	if expiry_time != 0 {
 		result["expires"] = expirationTime.String()
-	}else
-	{
+	} else {
 		result["expires"] = "Infinite"
 	}
 
@@ -221,39 +220,88 @@ type Claims struct {
 	jwt.StandardClaims
 }
 type TokenNilError struct{}
-func (m *TokenNilError) Error() string{
-  return "Token is nil."
+
+func (m *TokenNilError) Error() string {
+	return "Token is nil."
 }
+
 type TokenInvalidError struct{}
-func (m *TokenInvalidError) Error() string{
-  return "Token is Invalid."
+
+func (m *TokenInvalidError) Error() string {
+	return "Token is Invalid."
 }
+
 var jwt_key = []byte("secret_key")
-func TokenValidation(tokenStr string) (bool,error){
+
+func TokenValidation(tokenStr string) (bool, error) {
 	claims := &Claims{}
 	tkn, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) { return jwt_key, nil })
 
 	if tkn == nil {
-		
-		return false,&TokenNilError{}
-	}
 
-	
+		return false, &TokenNilError{}
+	}
 
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
-			
-			return false,err
+
+			return false, err
 		} else {
-			
-			return false,err
+
+			return false, err
 		}
 	}
 
 	if !tkn.Valid {
-       
-		return false,&TokenInvalidError{}
-	}
-	return true,nil
-}
 
+		return false, &TokenInvalidError{}
+	}
+	return true, nil
+}
+func Refresh_token(tokenStr string, expiry_time int) (error, map[string]string) {
+
+	claims := &Claims{}
+
+	tkn, err := jwt.ParseWithClaims(tokenStr, claims,
+		func(t *jwt.Token) (interface{}, error) {
+			return jwt_key, nil
+		})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+
+			return err, nil
+		}
+
+		return err, nil
+	}
+	if !tkn.Valid {
+
+		return &TokenInvalidError{}, nil
+	}
+
+	expirationTime := time.Now().Add(time.Minute * time.Duration(expiry_time))
+	if expiry_time == 0 {
+		claims.ExpiresAt = 0
+	} else {
+		claims.ExpiresAt = expirationTime.Unix()
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(jwt_key)
+
+	if err != nil {
+
+		return err, nil
+	}
+
+	result := make(map[string]string)
+
+	result["refresh_token"] = tokenString
+	if expiry_time != 0 {
+		result["expires"] = expirationTime.String()
+	} else {
+		result["expires"] = "Infinite"
+	}
+	return nil,result
+}
