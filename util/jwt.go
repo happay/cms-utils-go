@@ -116,39 +116,39 @@ func isNameValid(s string) bool {
 	return nameRegex.MatchString(s)
 }
 
-func Signup(admin Admin, db *gorm.DB,expiry_time int) (error,Admin,error,map[string]string) {
+func Signup(admin Admin, db *gorm.DB,expiry_time int) (error,Admin,map[string]string) {
 
 	_, err := govalidator.ValidateStruct(admin)
 	if err != nil {
-		return err, admin,nil,nil
+		return err, admin,nil
 	}
 
 	if !isEmailValid(admin.Email) {
-		return &InvalidEmailError{}, admin,nil,nil
+		return &InvalidEmailError{}, admin,nil
 	}
 	if !isPhoneValid(admin.Phone) {
-		return &InvalidPhoneError{}, admin,nil,nil
+		return &InvalidPhoneError{}, admin,nil
 	}
 
 	if !(verifyPassword(admin.Password)) {
-		return &InvalidPasswordError{}, admin,nil,nil
+		return &InvalidPasswordError{}, admin,nil
 	}
 	if !isNameValid(admin.FirstName) {
-		return &InvalidFirstnameError{}, admin,nil,nil
+		return &InvalidFirstnameError{}, admin,nil
 	}
 	if !isNameValid(admin.LastName) {
-		return &InvalidLastnameError{}, admin,nil,nil
+		return &InvalidLastnameError{}, admin,nil
 	}
 	if admin.MiddleName != "" {
 		if !isNameValid(admin.MiddleName) {
-			return &InvalidMiddlenameError{}, admin,nil,nil
+			return &InvalidMiddlenameError{}, admin,nil
 		}
 	}
     err,token:=Login(admin.Email,admin.Password,db,expiry_time)
 	if err!=nil{
-		return nil,admin,err,nil
+		return err,admin,nil
 	}
-	return nil, admin,nil,token
+	return nil, admin,token
 
 }
 
