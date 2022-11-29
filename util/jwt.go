@@ -17,6 +17,7 @@ import (
 
 type Admin struct {
 	gorm.Model
+
 	FirstName  string `json:"firstName" valid:"required~FirstName is required "`
 	MiddleName string `json:"middleName" `
 	LastName   string `json:"lastName" valid:"required~LastName is required "`
@@ -147,7 +148,6 @@ func ValidateSignup(admin Admin) (Admin, error) {
 
 }
 
-//
 type WrongPasswordError struct{}
 
 func (m *WrongPasswordError) Error() string {
