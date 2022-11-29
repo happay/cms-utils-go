@@ -151,7 +151,7 @@ func Signup(admin Admin, db *gorm.DB,expiry_time int) (error,Admin,map[string]st
 	return nil, admin,token
 
 }
-//
+
 type WrongPasswordError struct{}
 
 func (m *WrongPasswordError) Error() string {
