@@ -17,7 +17,6 @@ import (
 
 type Admin struct {
 	gorm.Model
-
 	FirstName  string `json:"firstName" valid:"required~FirstName is required "`
 	MiddleName string `json:"middleName" `
 	LastName   string `json:"lastName" valid:"required~LastName is required "`
@@ -116,68 +115,53 @@ func isNameValid(s string) bool {
 	return nameRegex.MatchString(s)
 }
 
-func Signup(admin Admin, db *gorm.DB,expiry_time int) (error,Admin,map[string]string) {
+func ValidateSignup(admin Admin) (Admin, error) {
 
 	_, err := govalidator.ValidateStruct(admin)
 	if err != nil {
-		return err, admin,nil
+		return admin, err
 	}
 
 	if !isEmailValid(admin.Email) {
-		return &InvalidEmailError{}, admin,nil
+		return admin, &InvalidEmailError{}
 	}
 	if !isPhoneValid(admin.Phone) {
-		return &InvalidPhoneError{}, admin,nil
+		return admin, &InvalidPhoneError{}
 	}
 
 	if !(verifyPassword(admin.Password)) {
-		return &InvalidPasswordError{}, admin,nil
+		return admin, &InvalidPasswordError{}
 	}
 	if !isNameValid(admin.FirstName) {
-		return &InvalidFirstnameError{}, admin,nil
+		return admin, &InvalidFirstnameError{}
 	}
 	if !isNameValid(admin.LastName) {
-		return &InvalidLastnameError{}, admin,nil
+		return admin, &InvalidLastnameError{}
 	}
 	if admin.MiddleName != "" {
 		if !isNameValid(admin.MiddleName) {
-			return &InvalidMiddlenameError{}, admin,nil
+			return admin, &InvalidMiddlenameError{}
 		}
 	}
-    err,token:=Login(admin.Email,admin.Password,db,expiry_time)
-	if err!=nil{
-		return err,admin,nil
-	}
-	return nil, admin,token
+	return admin, nil
 
 }
+
 //
 type WrongPasswordError struct{}
 
 func (m *WrongPasswordError) Error() string {
 	return "Wrong Password"
 }
-func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[string]string) {
+func GetLoginToken(id uint, email, password string, expiry_time int) (map[string]string, error) {
 
 	result := make(map[string]string)
-	var db_Admin Admin
-
-	pass1 := password
-
-	db.Where("email = ?", email).First(&db_Admin)
-
-	expectedPassword := db_Admin.Password
-
-	if !CheckPasswordHash(pass1, expectedPassword) {
-
-		return &WrongPasswordError{}, nil
-	}
 
 	expirationTime := time.Now().Add(time.Minute * time.Duration(expiry_time))
 	claimsForFiniteTime := &Claims{
 		Email:    email,
 		Password: password,
-		ID:       db_Admin.ID,
+		ID:       id,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -186,7 +170,7 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 	claimsForInfiniteTime := &Claims{
 		Email:    email,
 		Password: password,
-		ID:       db_Admin.ID,
+		ID:       id,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: 0,
 		},
@@ -200,7 +184,7 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 	tokenString, err := token.SignedString(jwt_key)
 	if err != nil {
 
-		return err, nil
+		return nil, err
 	}
 
 	result["token"] = tokenString
@@ -210,7 +194,7 @@ func Login(email, password string, db *gorm.DB, expiry_time int) (error, map[str
 		result["expires"] = "Infinite"
 	}
 
-	return nil, result
+	return result, nil
 }
 
 type Claims struct {
@@ -303,5 +287,5 @@ func Refresh_token(tokenStr string, expiry_time int) (error, map[string]string) 
 	} else {
 		result["expires"] = "Infinite"
 	}
-	return nil,result
+	return nil, result
 }
