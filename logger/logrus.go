@@ -77,8 +77,5 @@ func GrayLogHook(appName string) *graylog.GraylogHook {
 	graylogAddr := os.Getenv("GRAYLOG_URL")
 
 	hook := graylog.NewAsyncGraylogHook(graylogAddr, map[string]interface{}{"app": appName})
-
-	// Set from which level logging need to route in graylog (till info level all logging will route not DebugLevel and traceLevel)
-	hook.Level = logrus.InfoLevel
 	return hook
 }
