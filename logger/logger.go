@@ -25,7 +25,7 @@ var logInit sync.Once
 func initializeLogger(logPrefix, logPath string) {
 	logDirSplit := strings.Split(logPath, "/")
 	var logDirSlice []string
-	for i := 0; i < len(logDirSplit)-1; i ++ {
+	for i := 0; i < len(logDirSplit)-1; i++ {
 		logDirSlice = append(logDirSlice, logDirSplit[i])
 	}
 	logDir := strings.Join(logDirSlice, "/")
@@ -70,5 +70,3 @@ func GetLogWriter(logPrefix, logPath string) *io.Writer {
 	})
 	return &logWriter
 }
-
-

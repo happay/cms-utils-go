@@ -3,9 +3,10 @@ package connector
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis"
-	"github.com/happay/cms-utils-go/util"
 	"sync"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/happay/cms-utils-go/util"
 )
 
 const Pong = "PONG"
