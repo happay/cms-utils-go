@@ -26,3 +26,4 @@
 *.pgp
 *.gpg
 *.env
+.history

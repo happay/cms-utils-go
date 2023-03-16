@@ -2,13 +2,14 @@ package connector
 
 import (
 	"fmt"
-	"github.com/happay/cms-utils-go/util"
-	"github.com/jinzhu/gorm"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/happay/cms-utils-go/util"
+	"github.com/jinzhu/gorm"
+	"gopkg.in/yaml.v2"
 )
 
 var db *gorm.DB
@@ -27,9 +28,9 @@ const (
 )
 
 /*
-	PostgresConfigParams : AVOID the use of same variable
-	whenever using these constants. DON'T CHANGE THE BELOW ORDER as the parsing of GORM for
-	line argument is not by key (yeah I know, very weird thing. TODO: test with change in order)
+PostgresConfigParams : AVOID the use of same variable
+whenever using these constants. DON'T CHANGE THE BELOW ORDER as the parsing of GORM for
+line argument is not by key (yeah I know, very weird thing. TODO: test with change in order)
 */
 var PostgresConfigParams = []string{
 	PostgresHost,
@@ -89,9 +90,9 @@ func GetPgConn(dbCredPath string, pgConfigKey string) *gorm.DB {
 }
 
 /*
-	createPgConnString reads the given database connection config map,
-	and creates the collated string argument to be used in
-	creating database connection pool.
+createPgConnString reads the given database connection config map,
+and creates the collated string argument to be used in
+creating database connection pool.
 */
 func createPgConnString(pgDbConfigs map[string]string) string {
 	var connStrBuilder strings.Builder
@@ -114,7 +115,7 @@ func setPgConnLimits(db *gorm.DB, pgDbConfigs map[string]string) (*gorm.DB, erro
 		maxOpenConnCount, err := strconv.Atoi(util.GetConfigValue(maxOpenConnCountStr))
 		if err != nil {
 			err = fmt.Errorf("error setting max open connections: %s", err)
-			//logger.GetLogger().Println(err)
+			// logger.GetLogger().Println(err)
 			return db, err
 		}
 		db.DB().SetMaxOpenConns(maxOpenConnCount)
