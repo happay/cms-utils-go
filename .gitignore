@@ -27,3 +27,5 @@
 *.gpg
 *.env
 .history
+go.mod
+go.sum
