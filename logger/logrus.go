@@ -65,7 +65,7 @@ func initializeLoggerV2(logPrefix, logPath, appName string) {
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
-// GetLogger returns the logger object. It takes three input parameters.
+// GetLogger returns the logrus logger object. It takes three input parameters.
 // - logPrefix - it is a string used as Prefix on each log line
 // - logPath - absolute path of the log file where the logs will be written
 // - appName - It is app Name, from which service this function is being called to route the log to a specific Graylog stream.
