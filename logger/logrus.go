@@ -22,11 +22,13 @@ import (
 	graylog "github.com/gemnasium/logrus-graylog-hook/v3"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/Graylog2/go-gelf.v1/gelf"
 )
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 
 var loggerV2 *logrus.Logger
+var logWriterV2 io.Writer
 var logInitV2 sync.Once
 
 type LogInitializerObject struct {
@@ -106,8 +108,7 @@ func initializeLoggerWithLogRotation(logInitializerObject LogInitializerObject) 
 		if err != nil {
 			reason := fmt.Sprintf("create directory %s failed: %s", logDir, err)
 			err = errors.New(reason)
-			fmt.Println(err)
-			return
+			panic(err)
 		}
 	}
 	txnLogFile := logDir + "/" + logFileName + ".log"
@@ -145,14 +146,21 @@ func initializeLoggerWithLogRotation(logInitializerObject LogInitializerObject) 
 			fmt.Println("Force Rotating Log, Signal ", sig.String())
 			rl.Rotate()
 		}()
-		logWriter = rl
+
+		var gw *gelf.Writer
+		if gw, err = GrayLogWriter(); err != nil {
+			panic(err)
+		}
 
 		hook := GrayLogHook(appName)
 		defer hook.Flush()
+
+		logWriterV2 = io.MultiWriter(rl, gw)
+
 		loggerV2 = logrus.New()
 
 		loggerV2.SetFormatter(&logrus.JSONFormatter{})
-		loggerV2.SetOutput(logWriter)
+		loggerV2.SetOutput(logWriterV2)
 		//set file name and line number
 		loggerV2.SetReportCaller(true)
 		loggerV2.AddHook(hook)
@@ -190,8 +198,8 @@ func UploadLogFile(currentFile, logFileName, logS3FilePath, bankServer, bucketNa
 	sess, err := session.NewSession(s3Config)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating the S3 session : %s", err)
-		logger.Print(reason)
 		err = errors.New(reason)
+		logger.Print(err)
 		return
 	}
 
@@ -216,8 +224,8 @@ func IsFileExists(key, bucketName string, s3Config *aws.Config) (exists bool) {
 	sess, err := session.NewSession(s3Config)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating the S3 session : %s", err)
-		logger.Print(reason)
 		err = errors.New(reason)
+		logger.Print(err)
 		return
 	}
 	s3svc := s3.New(sess)
@@ -260,9 +268,26 @@ func GetLoggerWithLogRotation(logInitializerObject LogInitializerObject) *logrus
 	return loggerV2
 }
 
+func GetLogWriterWithLogRotation(logInitializerObject LogInitializerObject) *io.Writer {
+	logInit.Do(func() {
+		initializeLoggerWithLogRotation(logInitializerObject)
+	})
+	return &logWriterV2
+}
+
 func GrayLogHook(appName string) *graylog.GraylogHook {
 	graylogAddr := os.Getenv("GRAYLOG_URL")
 
 	hook := graylog.NewAsyncGraylogHook(graylogAddr, map[string]interface{}{"app": appName})
 	return hook
+}
+
+func GrayLogWriter() (gw *gelf.Writer, err error) {
+	graylogAddr := os.Getenv("GRAYLOG_URL")
+	gw, err = gelf.NewWriter(graylogAddr)
+	if err != nil {
+		log.Printf("Failed to connect graylog server: error = %s", err)
+		return
+	}
+	return
 }
