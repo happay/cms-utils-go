@@ -1,6 +1,9 @@
 package util
 
 import (
+	"crypto/rand"
+	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 
@@ -49,4 +52,20 @@ func CreateUUID() string {
 	}
 	return strings.Replace(id.String(), "-", "", -1)
 	//return strings.Replace(id, "-", "", -1)
+}
+
+// returns a random number(string) of fixed length (n)
+func GenerateRandomNumberOnlyString(n int) (str string, err error) {
+	var num int64
+	var nBig *big.Int
+	for i := 0; i < n; i++ {
+		nBig, err = rand.Int(rand.Reader, big.NewInt(10))
+		if err != nil {
+			err = fmt.Errorf("error while creating random number: %s", err)
+			return
+		}
+		num = nBig.Int64()
+		str += strconv.Itoa(int(num))
+	}
+	return
 }

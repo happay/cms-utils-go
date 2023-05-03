@@ -2,16 +2,17 @@ package s3
 
 import (
 	"bytes"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"time"
+	"github.com/happay/cms-utils-go/connector/aws/cred"
 )
 
 // ============ Constants =============
@@ -153,6 +154,11 @@ func (s3Client *S3Client) New() (err error) {
 	}
 
 	s3Client.s3 = s3.New(s3Client.session)
+	return
+}
+
+func (s3Client *S3Client) SetSession(sess *session.Session) {
+	s3Client.session = sess
 	return
 }
 
