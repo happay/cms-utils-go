@@ -163,8 +163,6 @@ func initializeLoggerWithLogRotation(logInitializerObject LogInitializerObject) 
 			logrus.ErrorLevel: rl,
 		}, &logrus.JSONFormatter{})
 
-		defer grayLogHook.Flush()
-
 		//create a log writer
 		logWriterV2 = io.MultiWriter(rl, gw)
 
@@ -186,6 +184,7 @@ func initializeLoggerWithLogRotation(logInitializerObject LogInitializerObject) 
 
 		// This will disable logging to stdout
 		loggerV2.Out = io.Discard
+
 	}
 }
 
