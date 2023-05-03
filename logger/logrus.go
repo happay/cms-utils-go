@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	graylog "github.com/gemnasium/logrus-graylog-hook/v3"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/Graylog2/go-gelf.v1/gelf"
 )
@@ -152,25 +153,39 @@ func initializeLoggerWithLogRotation(logInitializerObject LogInitializerObject) 
 			panic(err)
 		}
 
-		hook := GrayLogHook(appName)
-		defer hook.Flush()
+		//Grey Log hook
+		grayLogHook := GrayLogHook(appName)
+		defer grayLogHook.Flush()
 
+		//File Writer hook
+		localFileHook := lfshook.NewHook(lfshook.WriterMap{
+			logrus.InfoLevel:  rl,
+			logrus.ErrorLevel: rl,
+		}, &logrus.JSONFormatter{})
+
+		defer grayLogHook.Flush()
+
+		//create a log writer
 		logWriterV2 = io.MultiWriter(rl, gw)
 
 		loggerV2 = logrus.New()
+		loggerV2.SetOutput(os.Stdout)
 
+		//set the formatter of logs
 		loggerV2.SetFormatter(&logrus.JSONFormatter{})
-		loggerV2.SetOutput(logWriterV2)
+
 		//set file name and line number
 		loggerV2.SetReportCaller(true)
-		loggerV2.AddHook(hook)
 
 		// Set log level
 		loggerV2.SetLevel(logrus.DebugLevel)
 
+		//Adding the hooks
+		loggerV2.AddHook(grayLogHook)
+		loggerV2.AddHook(localFileHook)
+
 		// This will disable logging to stdout
 		loggerV2.Out = io.Discard
-
 	}
 }
 
