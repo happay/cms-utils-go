@@ -151,3 +151,23 @@ func PostResponseOpenSearch(serviceName, appId, reqId string, logEntry map[strin
 	}
 	return
 }
+func GetResponseOpenSearch(serviceName, appId, reqId string, osConfiguration CredentialConfiguration) (searchResult *elastic.SearchResult, err error) {
+	index := serviceName + strings.ToLower(time.Now().Month().String()) + "-" + strconv.Itoa(time.Now().Year())
+	os, _ := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index, osConfiguration.ShardCount, osConfiguration.ReplicasCount)
+	if os == nil {
+		return
+	}
+	appIdQuery := elastic.NewTermQuery("AppId.keyword", appId)
+	reqIdQuery := elastic.NewTermQuery("RequestId.keyword", reqId)
+	query := elastic.NewBoolQuery().Must(appIdQuery, reqIdQuery)
+	searchResult, err = elasticClient.Search().
+		Index(index).
+		Query(query).
+		Do(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("failed to query the data | %s", err)
+		fmt.Println(err)
+		return
+	}
+	return
+}
