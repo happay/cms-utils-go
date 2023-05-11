@@ -4,15 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const (
 	OpenSearchUrl = "url"
+	TypeDoc       = "doc"
 )
 
 type Configuration struct {
@@ -22,6 +25,14 @@ type Configuration struct {
 			NumberOfReplicas int `json:"number_of_replicas"`
 		} `json:"index"`
 	} `json:"settings"`
+}
+
+//to get the credentials for Os connection
+type CredentialConfiguration struct {
+	OsCredPath    string `json:"osCredPath"`
+	OsConfigKey   string `json:"osConfigKey"`
+	ShardCount    int    `json:"shardCount"`
+	ReplicasCount int    `json:"replicasCount"`
 }
 
 // GetOpenSearchConnection provides a client to elastic search which can be used for insertion, search, removal etc. operations
@@ -119,4 +130,24 @@ func IndexExists(indexName string) bool {
 		fmt.Println(reason)
 	}
 	return exists
+}
+
+func PostResponseOpenSearch(serviceName, appId, reqId string, logEntry map[string]interface{}, osConfiguration CredentialConfiguration) (err error) {
+	index := serviceName + strings.ToLower(time.Now().Month().String()) + "-" + strconv.Itoa(time.Now().Year())
+	openSearchClient, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index, osConfiguration.ShardCount, osConfiguration.ReplicasCount)
+	if err != nil {
+		err = fmt.Errorf("failed to get connection with open search")
+		return
+	}
+	_, err = openSearchClient.Index().
+		Index(index).
+		Type(TypeDoc).
+		BodyJson(logEntry).
+		Do(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("error while uploading Req-Response body to ES for app %s and request %s: %s",
+			appId, reqId, err)
+		return
+	}
+	return
 }
