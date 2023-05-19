@@ -15,7 +15,6 @@ import (
 
 const (
 	OpenSearchUrl = "url"
-	TypeDoc       = "doc"
 )
 
 type Configuration struct {
