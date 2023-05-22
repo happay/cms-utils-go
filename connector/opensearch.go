@@ -15,6 +15,8 @@ import (
 
 const (
 	OpenSearchUrl = "url"
+	Shard         = "shard"
+	Replica       = "replica"
 )
 
 type Configuration struct {
@@ -28,16 +30,14 @@ type Configuration struct {
 
 // to get the credentials for Os connection
 type CredentialConfiguration struct {
-	OsCredPath    string `json:"osCredPath"`
-	OsConfigKey   string `json:"osConfigKey"`
-	ShardCount    int    `json:"shardCount"`
-	ReplicasCount int    `json:"replicasCount"`
+	OsCredPath  string `json:"osCredPath"`
+	OsConfigKey string `json:"osConfigKey"`
 }
 
 // GetOpenSearchConnection provides a client to elastic search which can be used for insertion, search, removal etc. operations
-func GetOpenSearchConnection(osCredPath, osConfigKey string, index string, shardsCount int, replicasCount int) (*elastic.Client, error) {
+func GetOpenSearchConnection(osCredPath, osConfigKey string, index string) (*elastic.Client, error) {
 	var err error
-	err = initopenSearchConnectionAndIndexes(osCredPath, osConfigKey, index, shardsCount, replicasCount)
+	err = initopenSearchConnectionAndIndexes(osCredPath, osConfigKey, index)
 	return openSearchClient, err
 }
 
@@ -47,7 +47,7 @@ var openSearchClient *elastic.Client // singleton instance of open search client
 initOpenSearchConnectionAndIndexes initializes a global singleton client for elastic search.
 Additionally, it also checks if the indexes already exists, and creates them otherwise with given shard and replica count.
 */
-func initopenSearchConnectionAndIndexes(osCredPath, osConfigKey string, index string, shardsCount int, replicasCount int) (err error) {
+func initopenSearchConnectionAndIndexes(osCredPath, osConfigKey string, index string) (err error) {
 
 	var bytes []byte
 	bytes, err = ioutil.ReadFile(osCredPath)
@@ -64,22 +64,33 @@ func initopenSearchConnectionAndIndexes(osCredPath, osConfigKey string, index st
 	}
 
 	// fetch elastic search config
-	elasticConfig, found := allDatabaseConfigs[osConfigKey] // getting config ENV vars required for elastic search
+	openSearchConfig, found := allDatabaseConfigs[osConfigKey] // getting config ENV vars required for elastic search
 	if !found {
 		err = fmt.Errorf("open search config not found")
 		return
 	}
 
 	// initialize elastic search client
-	openSearchConnectionURL := fmt.Sprintf("%s", util.GetConfigValue(elasticConfig[OpenSearchUrl]))
+	openSearchConnectionURL := fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[OpenSearchUrl]))
 	openSearchClient, err = elastic.NewSimpleClient(elastic.SetURL(openSearchConnectionURL)) // connecting to open search, NOTE: sniffing is turned off currently
 	if elastic.IsConnErr(err) {
 		err = fmt.Errorf("initializing open search client failed: %s", err)
 		return
 	}
 
+	shard, err := strconv.Atoi(fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[Shard])))
+	if err != nil {
+		err = fmt.Errorf("failed to fetch shard count: %s", err)
+		return
+	}
+	replica, err := strconv.Atoi(fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[Replica])))
+	if err != nil {
+		err = fmt.Errorf("failed to fetch replica count: %s", err)
+		return
+	}
+
 	// checking and creating indexes, if required
-	err = CreateIndexWithShardManagement(index, shardsCount, replicasCount)
+	err = CreateIndexWithShardManagement(index, shard, replica)
 	if err != nil {
 		return
 	}
@@ -133,7 +144,7 @@ func IndexExists(indexName string) bool {
 
 func PostResponseOpenSearch(serviceName, appId, reqId string, logEntry map[string]interface{}, osConfiguration CredentialConfiguration) (err error) {
 	index := serviceName + strings.ToLower(time.Now().Month().String()) + "-" + strconv.Itoa(time.Now().Year())
-	openSearchClient, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index, osConfiguration.ShardCount, osConfiguration.ReplicasCount)
+	openSearchClient, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index)
 	if err != nil {
 		err = fmt.Errorf("PostResponseOpenSearch | failed to get connection with open search. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
 		return
@@ -161,7 +172,7 @@ func GetResponseOpenSearch(serviceName, appId, reqId string, osConfiguration Cre
 	}
 
 	index := serviceName + strings.ToLower(res.CreatedAt.Month().String()) + "-" + strconv.Itoa(res.CreatedAt.Year())
-	os, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index, osConfiguration.ShardCount, osConfiguration.ReplicasCount)
+	os, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index)
 	if err != nil {
 		err = fmt.Errorf("GetResponseOpenSearch | failed to get connection with open search. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
 		return
