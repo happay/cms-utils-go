@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
+	"io/ioutil"
+	"strconv"
+	"strings"
+	"time"
 )
 
 const (
@@ -22,6 +24,14 @@ type Configuration struct {
 			NumberOfReplicas int `json:"number_of_replicas"`
 		} `json:"index"`
 	} `json:"settings"`
+}
+
+// to get the credentials for Os connection
+type CredentialConfiguration struct {
+	OsCredPath    string `json:"osCredPath"`
+	OsConfigKey   string `json:"osConfigKey"`
+	ShardCount    int    `json:"shardCount"`
+	ReplicasCount int    `json:"replicasCount"`
 }
 
 // GetOpenSearchConnection provides a client to elastic search which can be used for insertion, search, removal etc. operations
@@ -119,4 +129,52 @@ func IndexExists(indexName string) bool {
 		fmt.Println(reason)
 	}
 	return exists
+}
+
+func PostResponseOpenSearch(serviceName, appId, reqId string, logEntry map[string]interface{}, osConfiguration CredentialConfiguration) (err error) {
+	index := serviceName + strings.ToLower(time.Now().Month().String()) + "-" + strconv.Itoa(time.Now().Year())
+	openSearchClient, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index, osConfiguration.ShardCount, osConfiguration.ReplicasCount)
+	if err != nil {
+		err = fmt.Errorf("PostResponseOpenSearch | failed to get connection with open search. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
+		return
+	}
+	_, err = openSearchClient.Index().
+		Index(index).
+		BodyJson(logEntry).
+		Do(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("PostResponseOpenSearch | error while uploading Req-Response body to OS for appId : %s | reqId: %s | servicename: %s | err : %s",
+			appId, reqId, serviceName, err)
+		return
+	}
+	return
+}
+func GetResponseOpenSearch(serviceName, appId, reqId string, osConfiguration CredentialConfiguration) (searchResult *elastic.SearchResult, err error) {
+	appIdQuery := elastic.NewTermQuery("AppId.keyword", appId)
+	reqIdQuery := elastic.NewTermQuery("RequestId.keyword", reqId)
+	query := elastic.NewBoolQuery().Must(appIdQuery, reqIdQuery)
+
+	res, ok := db.Where("req_id = ? and app_id = ?", reqId, appId).Find(&util.Lock{}).Value.(*util.Lock)
+	if !ok {
+		err = fmt.Errorf("GetResponseOpenSearch | unable to find lock record. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
+		return
+	}
+
+	index := serviceName + strings.ToLower(res.CreatedAt.Month().String()) + "-" + strconv.Itoa(res.CreatedAt.Year())
+	os, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index, osConfiguration.ShardCount, osConfiguration.ReplicasCount)
+	if err != nil {
+		err = fmt.Errorf("GetResponseOpenSearch | failed to get connection with open search. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
+		return
+	}
+
+	searchResult, err = os.Search().
+		Index(index).
+		Query(query).
+		Do(context.TODO())
+	if err != nil {
+		err = fmt.Errorf("GetResponseOpenSearch | failed to fetch the data from opensearch. reqID:  %s | appId: %s | servicename : %s | err : %s", reqId, appId, serviceName, err)
+		fmt.Println(err)
+		return
+	}
+	return
 }
