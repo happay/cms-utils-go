@@ -142,16 +142,12 @@ func IndexExists(indexName string) bool {
 	return exists
 }
 
-func PostResponseOpenSearch(serviceName, appId, reqId string, logEntry map[string]interface{}, osConfiguration CredentialConfiguration) (err error) {
+func PostResponseOpenSearch(os *elastic.Client, serviceName string, appId, reqId string, respLog map[string]interface{}) (err error) {
 	index := serviceName + strings.ToLower(time.Now().Month().String()) + "-" + strconv.Itoa(time.Now().Year())
-	openSearchClient, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index)
-	if err != nil {
-		err = fmt.Errorf("PostResponseOpenSearch | failed to get connection with open search. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
-		return
-	}
-	_, err = openSearchClient.Index().
+
+	_, err = os.Index().
 		Index(index).
-		BodyJson(logEntry).
+		BodyJson(respLog).
 		Do(context.TODO())
 	if err != nil {
 		err = fmt.Errorf("PostResponseOpenSearch | error while uploading Req-Response body to OS for appId : %s | reqId: %s | servicename: %s | err : %s",
@@ -160,7 +156,7 @@ func PostResponseOpenSearch(serviceName, appId, reqId string, logEntry map[strin
 	}
 	return
 }
-func GetResponseOpenSearch(serviceName, appId, reqId string, osConfiguration CredentialConfiguration) (searchResult *elastic.SearchResult, err error) {
+func GetResponseOpenSearch(os *elastic.Client, serviceName, appId, reqId string) (searchResult *elastic.SearchResult, err error) {
 	appIdQuery := elastic.NewTermQuery("AppId.keyword", appId)
 	reqIdQuery := elastic.NewTermQuery("RequestId.keyword", reqId)
 	query := elastic.NewBoolQuery().Must(appIdQuery, reqIdQuery)
@@ -172,12 +168,6 @@ func GetResponseOpenSearch(serviceName, appId, reqId string, osConfiguration Cre
 	}
 
 	index := serviceName + strings.ToLower(res.CreatedAt.Month().String()) + "-" + strconv.Itoa(res.CreatedAt.Year())
-	os, err := GetOpenSearchConnection(osConfiguration.OsCredPath, osConfiguration.OsConfigKey, index)
-	if err != nil {
-		err = fmt.Errorf("GetResponseOpenSearch | failed to get connection with open search. reqID:  %s | appId: %s | servicename : %s", reqId, appId, serviceName)
-		return
-	}
-
 	searchResult, err = os.Search().
 		Index(index).
 		Query(query).
