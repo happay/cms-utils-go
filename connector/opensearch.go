@@ -142,10 +142,10 @@ func IndexExists(indexName string) bool {
 	return exists
 }
 
-func PostResponseOpenSearch(os *elastic.Client, serviceName string, appId, reqId string, respLog map[string]interface{}) (err error) {
+func PostResponseOpenSearch(serviceName string, appId, reqId string, respLog map[string]interface{}) (err error) {
 	index := serviceName + strings.ToLower(time.Now().Month().String()) + "-" + strconv.Itoa(time.Now().Year())
 
-	_, err = os.Index().
+	_, err = openSearchClient.Index().
 		Index(index).
 		BodyJson(respLog).
 		Do(context.TODO())
@@ -156,7 +156,7 @@ func PostResponseOpenSearch(os *elastic.Client, serviceName string, appId, reqId
 	}
 	return
 }
-func GetResponseOpenSearch(os *elastic.Client, serviceName, appId, reqId string) (searchResult *elastic.SearchResult, err error) {
+func GetResponseOpenSearch(serviceName, appId, reqId string) (searchResult *elastic.SearchResult, err error) {
 	appIdQuery := elastic.NewTermQuery("AppId.keyword", appId)
 	reqIdQuery := elastic.NewTermQuery("RequestId.keyword", reqId)
 	query := elastic.NewBoolQuery().Must(appIdQuery, reqIdQuery)
@@ -168,7 +168,7 @@ func GetResponseOpenSearch(os *elastic.Client, serviceName, appId, reqId string)
 	}
 
 	index := serviceName + strings.ToLower(res.CreatedAt.Month().String()) + "-" + strconv.Itoa(res.CreatedAt.Year())
-	searchResult, err = os.Search().
+	searchResult, err = openSearchClient.Search().
 		Index(index).
 		Query(query).
 		Do(context.TODO())
