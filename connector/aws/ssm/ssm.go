@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-var AwsSsmRegion = os.Getenv("AWS_REGION")
+var AWS_SSM_REGION = os.Getenv("AWS_REGION")
 var AWS_ACCESS_KEY_ID = os.Getenv("AWS_ACCESS_KEY_ID")
 var AWS_SECRET_ACCESS_KEY = os.Getenv("AWS_SECRET_ACCESS_KEY")
 var SSM_PREFIX = os.Getenv("PARAMETER_STORE_PREFIX")
@@ -17,14 +17,14 @@ var SSM_PREFIX = os.Getenv("PARAMETER_STORE_PREFIX")
 const EmptyString = ""
 
 var ssmConfig = &aws.Config{
-	Region:      aws.String(AwsSsmRegion),
+	Region:      aws.String(AWS_SSM_REGION),
 	Credentials: credentials.NewStaticCredentials(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, "")}
 
 func GetParametersByPath(path string) (params []*ssm.Parameter, err error) {
 	// Error handling
 	if path == EmptyString {
 		err = fmt.Errorf("empty prefix path provided for getting parameters : %s", err)
-		panic(err)
+		return
 	}
 	// Load AWS credentials and region from environment variables, shared config, or EC2 instance metadata
 	ssmSession, err := session.NewSession(ssmConfig)
@@ -50,7 +50,7 @@ func GetParametersByPath(path string) (params []*ssm.Parameter, err error) {
 	}
 	return
 }
-func SetEnvironmentVariable() {
+func SetEnvironmentVariable() (err error) {
 	params, err := GetParametersByPath(SSM_PREFIX)
 	if err != nil {
 		err = fmt.Errorf("failed to get parameter from parameter store. Unable to set environment variables: %s", err)
@@ -60,6 +60,7 @@ func SetEnvironmentVariable() {
 		parameterName := aws.StringValue(param.Name)[len(SSM_PREFIX)+1:]
 		err = os.Setenv(parameterName, *param.Value)
 		if err != nil {
+			err = fmt.Errorf("error while setting OS ENV variable: %s", err)
 			return
 		}
 	}
