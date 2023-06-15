@@ -35,11 +35,10 @@ func GetParametersByPath(path string) (params []*ssm.Parameter, err error) {
 	ssmClient := ssm.New(ssmSession)
 
 	// Get the parameters by path from Parameter Store
-	withDecryption := true
 	err = ssmClient.GetParametersByPathPages(&ssm.GetParametersByPathInput{
 		Path:           &path,
 		Recursive:      aws.Bool(true),
-		WithDecryption: &withDecryption,
+		WithDecryption: aws.Bool(true),
 	}, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
 		params = append(params, page.Parameters...)
 		return !lastPage
