@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"sync"
 
 	graylog "github.com/gemnasium/logrus-graylog-hook/v3"
 	"github.com/sirupsen/logrus"
@@ -15,7 +14,6 @@ import (
 // ============ Internal(private) Methods - can only be called from inside this package ==============
 
 var loggerV2 *logrus.Logger
-var logInitV2 sync.Once
 
 func initializeLoggerV2(logPrefix, logPath, appName string) {
 	logDirSplit := strings.Split(logPath, "/")
