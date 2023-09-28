@@ -3,7 +3,6 @@ package logger
 import (
 	"context"
 	"os"
-	"sync"
 
 	"golang.org/x/exp/slog"
 )
@@ -13,9 +12,7 @@ import (
 type ContextReqId struct{}
 type ContextAppId struct{}
 
-var sLog *slog.Logger
-
-func initializeLoggerV3() {
+func initializeLoggerV3() *slog.Logger {
 	enc := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	})
@@ -23,10 +20,9 @@ func initializeLoggerV3() {
 		ContextReqId{},
 		ContextAppId{},
 	}}
-	sLog = slog.New(h)
+	sLog := slog.New(h)
+	return sLog
 }
-
-var sLogInit sync.Once
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
@@ -35,9 +31,7 @@ var sLogInit sync.Once
 // - logPath - absolute path of the log file where the logs will be written
 // - appName - It is app Name, from which service this function is being called to route the log to a specific Graylog stream.
 func GetLoggerV3() *slog.Logger {
-	sLogInit.Do(func() {
-		initializeLoggerV3()
-	})
+	sLog := initializeLoggerV3()
 	return sLog
 }
 
