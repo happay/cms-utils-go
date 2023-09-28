@@ -3,7 +3,6 @@ package logger
 import (
 	"context"
 	"os"
-	"sync"
 
 	"log/slog"
 )
@@ -13,34 +12,27 @@ import (
 type ContextReqId struct{}
 type ContextAppId struct{}
 
-var sLog *slog.Logger
-
-func initializeLoggerV3() {
+func initializeLoggerV3() *slog.Logger {
 	enc := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	})
-	h := ContextHandler{enc, []interface{}{
+	h := ContextHandler{enc, []any{
 		ContextReqId{},
 		ContextAppId{},
 	}}
-	sLog = slog.New(h)
+	return slog.New(h)
 }
-
-var sLogInit sync.Once
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
 // GetLoggerV3 returns the slog logger object.
 func GetLoggerV3() *slog.Logger {
-	sLogInit.Do(func() {
-		initializeLoggerV3()
-	})
-	return sLog
+	return initializeLoggerV3()
 }
 
 type ContextHandler struct {
 	slog.Handler
-	keys []interface{}
+	keys []any
 }
 
 func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
