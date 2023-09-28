@@ -20,16 +20,14 @@ func initializeLoggerV3() *slog.Logger {
 		ContextReqId{},
 		ContextAppId{},
 	}}
-	sLog := slog.New(h)
-	return sLog
+	return slog.New(h)
 }
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
 // GetLogger returns the slog logger object.
 func GetLoggerV3() *slog.Logger {
-	sLog := initializeLoggerV3()
-	return sLog
+	return initializeLoggerV3()
 }
 
 type ContextHandler struct {
