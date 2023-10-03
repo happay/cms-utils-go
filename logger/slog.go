@@ -16,7 +16,7 @@ func initializeLoggerV3() *slog.Logger {
 	enc := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	})
-	h := ContextHandler{enc, []any{
+	h := ContextHandler{enc, []interface{}{
 		ContextReqId{},
 		ContextAppId{},
 	}}
@@ -25,14 +25,14 @@ func initializeLoggerV3() *slog.Logger {
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
-// GetLogger returns the slog logger object.
+// GetLoggerV3 returns the slog logger object.
 func GetLoggerV3() *slog.Logger {
 	return initializeLoggerV3()
 }
 
 type ContextHandler struct {
 	slog.Handler
-	keys []any
+	keys []interface{}
 }
 
 func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
