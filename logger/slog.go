@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // ============ Internal(private) Methods - can only be called from inside this package ==============
@@ -19,7 +19,7 @@ func initializeLoggerV3() {
 	enc := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	})
-	h := ContextHandler{enc, []any{
+	h := ContextHandler{enc, []interface{}{
 		ContextReqId{},
 		ContextAppId{},
 	}}
@@ -30,10 +30,7 @@ var sLogInit sync.Once
 
 // =========== Exposed (public) Methods - can be called from external packages ============
 
-// GetLogger returns the logrus logger object. It takes three input parameters.
-// - logPrefix - it is a string used as Prefix on each log line
-// - logPath - absolute path of the log file where the logs will be written
-// - appName - It is app Name, from which service this function is being called to route the log to a specific Graylog stream.
+// GetLoggerV3 returns the slog logger object.
 func GetLoggerV3() *slog.Logger {
 	sLogInit.Do(func() {
 		initializeLoggerV3()
@@ -43,7 +40,7 @@ func GetLoggerV3() *slog.Logger {
 
 type ContextHandler struct {
 	slog.Handler
-	keys []any
+	keys []interface{}
 }
 
 func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
