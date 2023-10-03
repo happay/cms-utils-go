@@ -16,7 +16,7 @@ func initializeLoggerV3() *slog.Logger {
 	enc := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	})
-	h := ContextHandler{enc, []interface{}{
+	h := ContextHandler{enc, []any{
 		ContextReqId{},
 		ContextAppId{},
 	}}
@@ -32,7 +32,7 @@ func GetLoggerV3() *slog.Logger {
 
 type ContextHandler struct {
 	slog.Handler
-	keys []interface{}
+	keys []any
 }
 
 func (h ContextHandler) Handle(ctx context.Context, r slog.Record) error {
