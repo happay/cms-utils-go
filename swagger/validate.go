@@ -2,15 +2,17 @@ package swagger
 
 import (
 	"bytes"
+	"cms-utils-go/logger"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/happay/cms-utils-go/util"
-	"github.com/xeipuuv/gojsonschema"
 	"io/ioutil"
 	"strings"
 	"sync"
+
+	"github.com/ghodss/yaml"
+	"github.com/happay/cms-utils-go/util"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 var swaggerApiParseOnce sync.Once
@@ -41,7 +43,7 @@ func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, 
 	apiRequestBodySchema, eventName, err := getApiRequestBodySchema(requestUrlPath, requestMethod, requestBodyPresent, targetSwaggerApiSpec, swaggerApiSpecPath, routerGroups...)
 	if err != nil {
 		reason := fmt.Sprintf("error while fetching API request json schema: %s", err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 		return
 	}
@@ -51,7 +53,7 @@ func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, 
 		//	In case of no schema is found for the request URI, error is not thrown, just a warning log will be added
 		//reason := fmt.Sprintf("no json schema found for the request body for URL %s and Method %s",
 		//	requestUrlPath, requestMethod)
-		//fmt.Println(reason)
+		//logger.GetLoggerV3().Info(reason)
 
 		return
 	}
@@ -60,7 +62,7 @@ func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, 
 	result, err := gojsonschema.Validate(swaggerJsonLoader, requestJsonLoader)
 	if err != nil {
 		reason := fmt.Sprintf("error while validating json schema for request: %s", err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 		return
 	}
@@ -75,7 +77,7 @@ func ValidateSwagger(requestBodyMap map[string]interface{}, swaggerApiSpecPath, 
 			}
 		}
 		reason := reasonBuffer.String()
-		fmt.Println(reason)
+		logger.GetLoggerV3().Info(reason)
 		err = errors.New(reason)
 	}
 	return
@@ -94,7 +96,7 @@ func initSwaggerApiSpec(swaggerApiSpecPath string) {
 	swaggerYamlData, err := ioutil.ReadFile(swaggerApiSpecPath)
 	if err != nil {
 		reason := fmt.Sprintf("error while reading the swagger API specification: %s", err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		return
 	}
 
@@ -105,7 +107,7 @@ func initSwaggerApiSpec(swaggerApiSpecPath string) {
 
 	if err = json.Unmarshal(swaggerJsonData, &swaggerApiSpec); err != nil {
 		reason := "Error while parsing the swagger API specification."
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 	}
 }
 
@@ -115,7 +117,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	if !found {
 		reason := fmt.Sprintf("malformed swagger API spec as paths keys is not found")
 		err = errors.New(reason)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	found = false
@@ -144,7 +146,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	if !found {
 		reason := fmt.Sprintf("no json schema is found for schemaUrlPath %s and method %s",
 			schemaUrlPath, requestMethod)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		return
 	}
 
@@ -153,7 +155,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	if !found {
 		reason := fmt.Sprintf("request method %s is not defined for URL Path: %s",
 			requestMethod, requestUrlPath)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		return
 	}
 
@@ -163,7 +165,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	eventNameInterface, found := methodDetailMap["operationId"]
 	if !found {
 		reason := fmt.Sprintf("unable to find event name")
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 		return
 	}
@@ -175,7 +177,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	if requestBodyPresent && !found {
 		reason := fmt.Sprintf("requestBody field is missing in the API schema for URL Path: %s",
 			requestUrlPath)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		return
 	}
 
@@ -241,7 +243,7 @@ func resolveAndGetRequestBodySchema(requestBodyMap map[string]interface{}, swagg
 		actualRequestSchema, err = getReferencedComponent(contentDetails.(string), swaggerApiSpecPath)
 		if err != nil {
 			reason := fmt.Sprintf("fetching referenced component failed: %s", err)
-			fmt.Println(reason)
+			logger.GetLoggerV3().Error(reason)
 			err = errors.New(reason)
 			return
 		}
@@ -266,7 +268,7 @@ func resolveAndGetRequestBodySchema(requestBodyMap map[string]interface{}, swagg
 					requestSchemaInterface, found := util.GetNestedKeyValue(refDetailKeys, getSwaggerApiSpec(swaggerApiSpecPath))
 					if !found {
 						reason := fmt.Sprintf("request schema not found")
-						fmt.Println(reason)
+						logger.GetLoggerV3().Error(reason)
 						err = errors.New(reason)
 						return
 					} else {
@@ -274,7 +276,7 @@ func resolveAndGetRequestBodySchema(requestBodyMap map[string]interface{}, swagg
 					}
 				} else {
 					reason := fmt.Sprintf("improper schema defined for the request body")
-					fmt.Println(reason)
+					logger.GetLoggerV3().Info(reason)
 					err = errors.New(reason)
 					return
 				}
@@ -282,7 +284,7 @@ func resolveAndGetRequestBodySchema(requestBodyMap map[string]interface{}, swagg
 		}
 	} else {
 		reason := "invalid schema defined for URL"
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 	}
 	return
@@ -293,7 +295,7 @@ func getReferencedComponent(refString string, swaggerApiSpecPath string) (referr
 	requestBodyMap, found := util.GetNestedKeyValue(refDetailKeys, getSwaggerApiSpec(swaggerApiSpecPath))
 	if !found {
 		reason := fmt.Sprintf("request schema not found")
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 	} else {
 		referredObject = requestBodyMap.(map[string]interface{})

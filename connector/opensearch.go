@@ -1,16 +1,18 @@
 package connector
 
 import (
+	"cms-utils-go/logger"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/happay/cms-utils-go/util"
-	"github.com/olivere/elastic/v7"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/happay/cms-utils-go/util"
+	"github.com/olivere/elastic/v7"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -113,21 +115,21 @@ func CreateIndexWithShardManagement(indexName string, shardsCount int, replicasC
 	requestBody, err := json.Marshal(config)
 	if err != nil {
 		err = fmt.Errorf("error marshalling shard configuration for index %s | %s", indexName, err)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 
 	result, err = openSearchClient.CreateIndex(indexName).Body(string(requestBody)).Do(context.Background())
 	if err != nil {
 		err = fmt.Errorf("%s index creation fails: %s", indexName, err)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 
 	// checking if the index creating request is successfully acknowledged by elastic search
 	if result.Acknowledged == false {
 		err = fmt.Errorf("%s index creation is not acknowledged by open search", indexName)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	return
@@ -137,7 +139,7 @@ func IndexExists(indexName string) bool {
 	exists, err := openSearchClient.IndexExists(indexName).Do(context.Background())
 	if err != nil {
 		reason := fmt.Sprintf("error checking if %s index already exist: %s", indexName, err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 	}
 	return exists
 }
@@ -174,7 +176,7 @@ func GetResponseOpenSearch(serviceName, appId, reqId string) (searchResult *elas
 		Do(context.TODO())
 	if err != nil {
 		err = fmt.Errorf("GetResponseOpenSearch | failed to fetch the data from opensearch. reqID:  %s | appId: %s | servicename : %s | err : %s", reqId, appId, serviceName, err)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	return

@@ -1,24 +1,24 @@
 package util
 
 import (
+	"cms-utils-go/logger"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"net/http"
 )
 
 const (
-	AppID      = "App-ID"
-	RequestID  = "Request-ID"
+	AppID     = "App-ID"
+	RequestID = "Request-ID"
 )
-
 
 type Lock struct {
 	BaseModel
 	ReqId string `gorm:"unique_index:idx_req_id_app_id"`
 	AppId string `gorm:"unique_index:idx_req_id_app_id"`
 }
-
 
 func CheckIdempotency(c *gin.Context, noRouteHandler string, db *gorm.DB) (bool, error) {
 	var err error
@@ -34,7 +34,7 @@ func CheckIdempotency(c *gin.Context, noRouteHandler string, db *gorm.DB) (bool,
 	err = db.Create(lock).Error
 	if err != nil {
 		err := fmt.Errorf("error while inserting records in lock table reqId %s, app %s, err : %s", appId, reqId, err)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return false, err
 	}
 	return true, err
