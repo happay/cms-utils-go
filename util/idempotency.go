@@ -1,9 +1,10 @@
 package util
 
 import (
-	"cms-utils-go/logger"
 	"fmt"
 	"net/http"
+
+	"github.com/happay/cms-utils-go/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"

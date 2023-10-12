@@ -1,12 +1,13 @@
 package swagger
 
 import (
-	"cms-utils-go/logger"
 	"errors"
 	"fmt"
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/happay/cms-utils-go/logger"
 )
 
 const (

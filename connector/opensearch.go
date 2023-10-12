@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"cms-utils-go/logger"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/happay/cms-utils-go/logger"
 
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"

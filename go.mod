@@ -1,4 +1,4 @@
-module cms-utils-go
+module github.com/happay/cms-utils-go
 
 go 1.21
 
@@ -12,7 +12,6 @@ require (
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.1
-	github.com/happay/cms-utils-go v1.2.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/sirupsen/logrus v1.9.3

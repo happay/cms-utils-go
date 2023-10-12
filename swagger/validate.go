@@ -2,13 +2,14 @@ package swagger
 
 import (
 	"bytes"
-	"cms-utils-go/logger"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"strings"
 	"sync"
+
+	"github.com/happay/cms-utils-go/logger"
 
 	"github.com/ghodss/yaml"
 	"github.com/happay/cms-utils-go/util"
