@@ -36,7 +36,7 @@ func initializeLogger(logPrefix, logPath string) {
 		if err != nil {
 			reason := fmt.Sprintf("create directory %s failed: %s", logDir, err)
 			err = errors.New(reason)
-			fmt.Println(err)
+			GetLoggerV3().Error(err.Error())
 			return
 		}
 	}

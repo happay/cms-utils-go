@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/happay/cms-utils-go/logger"
 	"github.com/happay/cms-utils-go/util"
 )
 
@@ -28,8 +29,7 @@ func GetRedisConn(redisAddrKey string) *redis.Client {
 		pong, err := redisClient.Ping(ctx).Result()
 		if err != nil || pong != Pong {
 			reason := fmt.Sprintf("Error while creating Redis connection pool: %s", err)
-			//logger.GetLogger().Println(reason)
-			fmt.Println(reason)
+			logger.GetLoggerV3().Info(reason)
 		}
 	})
 	return redisClient

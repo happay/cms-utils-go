@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/happay/cms-utils-go/util"
-	"github.com/xeipuuv/gojsonschema"
 	"io/ioutil"
 	"strings"
 	"sync"
+
+	"github.com/ghodss/yaml"
+	"github.com/happay/cms-utils-go/logger"
+	"github.com/happay/cms-utils-go/util"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 var swaggerApiParseOnce sync.Once
@@ -115,7 +117,7 @@ func getApiRequestBodySchema(requestUrlPath, requestMethod string, requestBodyPr
 	if !found {
 		reason := fmt.Sprintf("malformed swagger API spec as paths keys is not found")
 		err = errors.New(reason)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	found = false

@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/happay/cms-utils-go/logger"
 )
 
 const (
@@ -21,7 +22,7 @@ func TransformSwagger(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[stri
 	modifiedSwaggerSpec, err = getModifiedSwaggerSpec(swaggerApiSpecPath)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating modified swagger spec: %s", err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 		return
 	}
@@ -29,7 +30,7 @@ func TransformSwagger(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[stri
 	modifiedSwaggerSpec, err = makeModifiedSwaggerSpecOrdered(modifiedSwaggerSpec)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating modified swagger spec: %s", err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Error(reason)
 		err = errors.New(reason)
 		return
 	}
@@ -42,20 +43,20 @@ func TransformSwagger(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[stri
 func getModifiedSwaggerSpec(swaggerApiSpecPath string) (modifiedSwaggerSpec []map[string]interface{}, err error) {
 	originalSwaggerSpec := getSwaggerApiSpec(swaggerApiSpecPath)
 	flattendSpec, err := expandSwaggerSpecRefs(originalSwaggerSpec, swaggerApiSpecPath, false)
-	if err != nil{
-		fmt.Println(err)
+	if err != nil {
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	moreFlattenSpec, err := flattenNestedRequestBodySchema(flattendSpec)
 	if err != nil {
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	modifiedSwaggerSpec = make([]map[string]interface{}, 0)
 	pathsMap, found := moreFlattenSpec["paths"].(map[string]interface{})
 	if !found {
 		err = fmt.Errorf("malformed swagger json, paths key not found")
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	tagsDescription := originalSwaggerSpec["tags"].([]interface{})
@@ -177,7 +178,7 @@ func expandSwaggerSpecRefs(originalSwaggerSpec map[string]interface{}, swaggerAp
 			strings.HasPrefix(val.(string), "#/") { // a internal component reference, so expand it
 			flattendSpec[key], err = getReferencedComponent(val.(string), swaggerApiSpecPath)
 			if err != nil {
-				fmt.Println(err)
+				logger.GetLoggerV3().Error(err.Error())
 				panic(err)
 			}
 			flattendSpec[ReferenceKey] = flattendSpec[key]
@@ -192,13 +193,13 @@ func expandSwaggerSpecRefs(originalSwaggerSpec map[string]interface{}, swaggerAp
 			if key != "items" {
 				flattendSpec[key], err = expandSwaggerSpecRefs(val.(map[string]interface{}), swaggerApiSpecPath, true)
 				if err != nil {
-					fmt.Println(err)
+					logger.GetLoggerV3().Error(err.Error())
 					panic(err)
 				}
 			} else {
 				flattendSpec[key], err = expandSwaggerSpecRefs(val.(map[string]interface{}), swaggerApiSpecPath, false)
 				if err != nil {
-					fmt.Println(err)
+					logger.GetLoggerV3().Error(err.Error())
 					panic(err)
 				}
 			}
@@ -208,7 +209,7 @@ func expandSwaggerSpecRefs(originalSwaggerSpec map[string]interface{}, swaggerAp
 					for idx, value := range val.([]interface{}) {
 						val.([]interface{})[idx], err = expandSwaggerSpecRefs(value.(map[string]interface{}), swaggerApiSpecPath, true)
 						if err != nil {
-							fmt.Println(err)
+							logger.GetLoggerV3().Error(err.Error())
 							panic(err)
 						}
 					}
@@ -218,7 +219,7 @@ func expandSwaggerSpecRefs(originalSwaggerSpec map[string]interface{}, swaggerAp
 					for idx, value := range val.([]interface{}) {
 						val.([]interface{})[idx], err = expandSwaggerSpecRefs(value.(map[string]interface{}), swaggerApiSpecPath, false)
 						if err != nil {
-							fmt.Println(err)
+							logger.GetLoggerV3().Error(err.Error())
 							panic(err)
 						}
 					}

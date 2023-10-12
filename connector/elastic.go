@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/happay/cms-utils-go/logger"
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
@@ -34,7 +35,7 @@ func GetElasticSearchData(elasticClient *elastic.Client, index string, query *el
 		Do(context.TODO())
 	if err != nil {
 		err = fmt.Errorf("failed to query the data | %s", err)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	return
@@ -125,15 +126,15 @@ func createIndex(indexName string) (err error) {
 	index, err := elasticClient.Search(indexName).Do(context.Background())
 	if err != nil { // index doesn't exist
 		reason := fmt.Sprintf("error checking if %s index already exist: %s", indexName, err)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Info(reason)
 	} else if index.Shards.Successful < index.Shards.Total { // index already exist, but some shards are unavailable
 		reason := fmt.Sprintf("%s index already exist, but only %d shards are available out of %d", indexName,
 			index.Shards.Successful, index.Shards.Total)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Info(reason)
 		//	TODO: Should we raise a panic here?
 	} else {
 		reason := fmt.Sprintf("%s index already exist, so skipping creation", indexName)
-		fmt.Println(reason)
+		logger.GetLoggerV3().Info(reason)
 		return
 	}
 
@@ -142,14 +143,14 @@ func createIndex(indexName string) (err error) {
 	result, err = elasticClient.CreateIndex(indexName).Do(context.Background())
 	if err != nil {
 		err = fmt.Errorf("%s index creation fails: %s", indexName, err)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 
 	// checking if the index creating request is successfully acknowledged by elastic search
-	if result.Acknowledged == false {
+	if !result.Acknowledged {
 		err = fmt.Errorf("%s index creation is not acknowledged by elastic search", indexName)
-		fmt.Println(err)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	return
