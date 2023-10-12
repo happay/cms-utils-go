@@ -1,12 +1,13 @@
 package connector
 
 import (
-	"cms-utils-go/logger"
 	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/happay/cms-utils-go/logger"
 
 	"github.com/happay/cms-utils-go/util"
 	"github.com/jinzhu/gorm"
