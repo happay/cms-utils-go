@@ -1,10 +1,11 @@
 package connector
 
 import (
-	"cms-utils-go/logger"
 	"context"
 	"fmt"
 	"io/ioutil"
+
+	"github.com/happay/cms-utils-go/logger"
 
 	"github.com/happay/cms-utils-go/util"
 	"github.com/olivere/elastic/v7"

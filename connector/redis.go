@@ -1,10 +1,11 @@
 package connector
 
 import (
-	"cms-utils-go/logger"
 	"context"
 	"fmt"
 	"sync"
+
+	"github.com/happay/cms-utils-go/logger"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/happay/cms-utils-go/util"
