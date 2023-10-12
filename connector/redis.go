@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"cms-utils-go/logger"
 	"context"
 	"fmt"
 	"sync"
@@ -29,7 +30,7 @@ func GetRedisConn(redisAddrKey string) *redis.Client {
 		if err != nil || pong != Pong {
 			reason := fmt.Sprintf("Error while creating Redis connection pool: %s", err)
 			//logger.GetLogger().Println(reason)
-			fmt.Println(reason)
+			logger.GetLoggerV3().Error(reason)
 		}
 	})
 	return redisClient

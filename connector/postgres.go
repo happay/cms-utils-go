@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"cms-utils-go/logger"
 	"fmt"
 	"io/ioutil"
 	"strconv"
@@ -47,45 +48,45 @@ var PostgresConfigParams = []string{
 // It doesn't set the db logger. You would need to explicity set it using db.SetLogger(<logger>)
 func GetPgConn(dbCredPath string, pgConfigKey string) *gorm.DB {
 	pgConn.Do(func() {
-		fmt.Println("initiating postgres connection", dbCredPath, pgConfigKey)
+		logger.GetLoggerV3().Info("initiating postgres connection", dbCredPath, pgConfigKey)
 		var bytes []byte
 		var err error
 		//read database yaml configuration file
 		if bytes, err = ioutil.ReadFile(dbCredPath); err != nil {
 			err = fmt.Errorf("file read error %s: %s", dbCredPath, err)
-			fmt.Println(err.Error())
+			logger.GetLoggerV3().Error(err.Error())
 			return
 		}
 		// map the yaml file dbConfigs map object
 		dbConfigs := make(map[string]map[string]string)
 		if err = yaml.Unmarshal(bytes, &dbConfigs); err != nil {
 			err = fmt.Errorf("error while parsing the database configuration: %s", err)
-			fmt.Println(err.Error())
+			logger.GetLoggerV3().Error(err.Error())
 			return
 		}
 		// get postgres database configuration from the dbConfigs
 		if pgDbConfigs, found := dbConfigs[pgConfigKey]; !found {
 			err = fmt.Errorf("%s database config not found on yaml file: %s", pgConfigKey, dbCredPath)
-			fmt.Println(err.Error())
+			logger.GetLoggerV3().Error(err.Error())
 			return
 		} else {
 			pgConnStr := createPgConnString(pgDbConfigs)
 			if db, err = gorm.Open("postgres", pgConnStr); err != nil {
 				err = fmt.Errorf("initialize postgres db connection failed: %s", err)
-				fmt.Println(err.Error())
+				logger.GetLoggerV3().Error(err.Error())
 				return
 			}
 			if db, err = setPgConnLimits(db, pgDbConfigs); err != nil {
 				err = fmt.Errorf("error setting connection limits: %s", err)
-				fmt.Println(err.Error())
+				logger.GetLoggerV3().Error(err.Error())
 				return
 			}
 			db.BlockGlobalUpdate(true)
 			//db.SetLogger(logger.GetLogger())
-			fmt.Println("postgres connection established")
+			logger.GetLoggerV3().Info("postgres connection established")
 		}
 	})
-	fmt.Println("return statement")
+	logger.GetLoggerV3().Info("return statement")
 	return db
 }
 
