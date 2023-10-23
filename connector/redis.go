@@ -53,22 +53,6 @@ func GetRedisConnectionWithAuth(ctx context.Context) *redis.ClusterClient {
 		redisClusterClient = redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs:    []string{os.Getenv("REDIS_URL")},
 			Password: os.Getenv("REDIS_PASSWORD"),
-			// PoolSize:     10,
-			// MinIdleConns: 10,
-
-			// DialTimeout:  5 * time.Second,
-			// ReadTimeout:  3 * time.Second,
-			// WriteTimeout: 3 * time.Second,
-			// PoolTimeout:  4 * time.Second,
-
-			// IdleCheckFrequency: 60 * time.Second,
-			// IdleTimeout:        5 * time.Minute,
-			// MaxConnAge:         0 * time.Second,
-
-			// MaxRetries:      10,
-			// MinRetryBackoff: 8 * time.Millisecond,
-			// MaxRetryBackoff: 512 * time.Millisecond,
-
 			TLSConfig: &tls.Config{
 				InsecureSkipVerify: true,
 			},
