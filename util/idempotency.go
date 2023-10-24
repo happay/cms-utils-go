@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/happay/cms-utils-go/logger"
+	"github.com/happay/cms-utils-go/v2/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"

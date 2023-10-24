@@ -7,10 +7,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/happay/cms-utils-go/logger"
+	"github.com/happay/cms-utils-go/v2/logger"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/happay/cms-utils-go/util"
+	"github.com/happay/cms-utils-go/v2/util"
 )
 
 const Pong = "PONG"

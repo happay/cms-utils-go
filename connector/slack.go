@@ -3,9 +3,9 @@ package connector
 import (
 	"fmt"
 
-	"github.com/happay/cms-utils-go/connector/aws/cred"
-	"github.com/happay/cms-utils-go/connector/aws/lambda"
-	"github.com/happay/cms-utils-go/util"
+	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	"github.com/happay/cms-utils-go/v2/connector/aws/lambda"
+	"github.com/happay/cms-utils-go/v2/util"
 )
 
 // SlackMessage is used to send the message on the specified slack channel.

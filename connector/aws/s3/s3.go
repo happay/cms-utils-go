@@ -2,16 +2,17 @@ package s3
 
 import (
 	"bytes"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"io/ioutil"
-	"net/http"
-	"os"
-	"time"
+	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
 )
 
 // ============ Constants =============
