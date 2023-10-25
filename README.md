@@ -45,7 +45,6 @@ import (
 
     "github.com/happay/cms-utils-go/v2/connector"
     "github.com/redis/go-redis/v9"
-    "github.com/yourusername/pkg-utils-go"
 )
 
 func main() {
