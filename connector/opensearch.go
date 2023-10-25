@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/happay/cms-utils-go/logger"
+	"github.com/happay/cms-utils-go/v2/logger"
 
-	"github.com/happay/cms-utils-go/util"
+	"github.com/happay/cms-utils-go/v2/util"
 	"github.com/olivere/elastic/v7"
 	"gopkg.in/yaml.v2"
 )

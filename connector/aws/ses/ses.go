@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/asaskevich/govalidator"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/go-gomail/gomail"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
-	"strings"
+	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
 )
 
 // ============ Constants =============

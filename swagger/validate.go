@@ -9,10 +9,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/happay/cms-utils-go/logger"
+	"github.com/happay/cms-utils-go/v2/logger"
 
 	"github.com/ghodss/yaml"
-	"github.com/happay/cms-utils-go/util"
+	"github.com/happay/cms-utils-go/v2/util"
 	"github.com/xeipuuv/gojsonschema"
 )
 

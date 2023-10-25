@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/happay/cms-utils-go/connector/aws/cred"
-	"github.com/happay/cms-utils-go/util"
+	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	"github.com/happay/cms-utils-go/v2/util"
 )
 
 // LambdaClient ...
