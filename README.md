@@ -24,6 +24,7 @@ This repository contains a collection of utility functions for Go (Golang) devel
 
 ```shell
 go get github.com/happay/cms-utils-go/v2@v2.0.3
+go mod tidy
 ```
 Please make sure we update the exiting import 
 ```go
