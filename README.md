@@ -34,6 +34,26 @@ with major version 2 in order to use redis-cluster client with auth  mode and va
 ```go 
 import github.com/happay/cms-utils-go/v2
 ```
+Note: Since the latest version 2 support upgreded version of redis v9, to support this following changes will be required in exiting code:
+
+1. install and update the import with (github.com/redis/go-redis/v9)
+```go 
+go get github.com/redis/go-redis/v9
+```
+2. version 9 of redis does not support (*redis.Client).Context() in order to resolve that please use go context (context.Context). eg
+
+Then
+```go
+func SetRedisKey(key string, data string, exp time.Duration) error {
+	return redisClient.Set(redisClient.Context(), key, data, exp).Err()
+}
+```
+Now
+```go 
+func (r *RedisClient) SetRedisKey(ctx context.Context, key, data string, exp time.Duration) error {
+	return r.Set(ctx, key, data, exp).Err()
+}
+```
 ### Quickstart
 ```go
 package main
