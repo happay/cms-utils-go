@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/go-gomail/gomail"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
 )
 
 // ============ Constants =============
@@ -116,7 +117,7 @@ func (emailClient *EmailClient) New() (err error) {
 		config.Credentials = credentials.NewStaticCredentials(emailClient.Key, emailClient.Secret, "")
 	}
 
-	sess, err := session.NewSession(&config)
+	sess, err := utilSession.GetSession(&config)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating the SES session : %s", err)
 		err = errors.New(reason)

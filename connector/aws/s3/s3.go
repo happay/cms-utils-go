@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
 )
 
 // ============ Constants =============
@@ -148,7 +149,7 @@ func (s3Client *S3Client) New() (err error) {
 		s3Config.Credentials = credentials.NewStaticCredentials(s3Client.Key, s3Client.Secret, "")
 	}
 
-	s3Client.session, err = session.NewSession(&s3Config)
+	s3Client.session, err = utilSession.GetSession(&s3Config)
 	if err != nil {
 		return
 	}

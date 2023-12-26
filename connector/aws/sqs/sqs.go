@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
 )
 
 var Region = os.Getenv("SSM_PS_RG")
@@ -133,7 +134,7 @@ func InitQueue(url string, optArgs ...string) (queueClient *QueueClient, err err
 		awsSecret := optArgs[1]
 		awsConfig.Credentials = credentials.NewStaticCredentials(awsKey, awsSecret, "")
 	}
-	sess, err := session.NewSession(awsConfig)
+	sess, err := utilSession.GetSession(awsConfig)
 	queueClient = &QueueClient{
 		Url:     url,
 		session: sess,
