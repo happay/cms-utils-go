@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
 	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
+	"github.com/happay/cms-utils-go/v2/logger"
 )
 
 var Region = os.Getenv("SSM_PS_RG")
@@ -135,6 +136,9 @@ func InitQueue(url string, optArgs ...string) (queueClient *QueueClient, err err
 		awsConfig.Credentials = credentials.NewStaticCredentials(awsKey, awsSecret, "")
 	}
 	sess, err := utilSession.GetSession(awsConfig)
+	if err != nil {
+		logger.GetLoggerV3().Error("Error creating session for SQS" + err.Error())
+	}
 	queueClient = &QueueClient{
 		Url:     url,
 		session: sess,
