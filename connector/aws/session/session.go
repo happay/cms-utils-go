@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/happay/cms-utils-go/v2/logger"
 )
@@ -20,8 +19,7 @@ func GetSession(config *aws.Config) (*session.Session, error) {
 	}
 	// Recreate the session
 	sharedSession, err = session.NewSession(&aws.Config{
-		Region:      aws.String(os.Getenv("AWS_REGION")), // Replace with your AWS region
-		Credentials: credentials.NewStaticCredentials(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), os.Getenv("AWS_SESSION_TOKEN")),
+		Region: aws.String(os.Getenv("AWS_REGION")), // Replace with your AWS region
 	})
 	if err != nil {
 		logger.GetLoggerV3().Error("Error while creating an AWS session" + err.Error())
