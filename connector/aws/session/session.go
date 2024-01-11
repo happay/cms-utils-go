@@ -9,6 +9,10 @@ import (
 	"github.com/happay/cms-utils-go/v2/logger"
 )
 
+const (
+	SESSION_EXPIRATION_TIME = 1 * time.Hour
+)
+
 var sharedSession *session.Session
 var err error
 var expiration time.Time
@@ -25,6 +29,6 @@ func GetSession(config *aws.Config) (*session.Session, error) {
 		logger.GetLoggerV3().Error("Error while creating an AWS session" + err.Error())
 		return sharedSession, err
 	}
-	expiration = time.Now().Add(1 * time.Hour) // Set expiration time to 1 hour
+	expiration = time.Now().Add(SESSION_EXPIRATION_TIME) // Set expiration time to 1 hour
 	return sharedSession, err
 }

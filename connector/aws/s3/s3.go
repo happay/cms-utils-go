@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -199,24 +198,12 @@ func (s3Client *S3Client) New() (err error) {
 	return
 }
 
-func (s3Client *S3Client) IsFileExists(key string) (exists bool) {
+func (s3Client *S3Client) IsFileExists(key string) bool {
 	_, err := s3Client.s3.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(s3Client.BucketName),
 		Key:    aws.String(key),
 	})
-	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "NotFound":
-				exists = false
-				return
-			default:
-				return
-			}
-		}
-	}
-	exists = true
-	return
+	return err == nil
 }
 
 func (s3Client *S3Client) GetS3FileBytes(s3key string) (fileBytes []byte, err error) {
