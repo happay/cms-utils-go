@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/happay/cms-utils-go/v2/logger"
 	"github.com/redis/go-redis/v9"
@@ -68,4 +69,56 @@ func GetRedisConnectionWithAuth(ctx context.Context) *redis.ClusterClient {
 		}
 	})
 	return redisClusterClient
+}
+
+func SetRedisKey(key string, data string, exp time.Duration) error {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	return redisClusterClient.Set(ctx, key, data, exp).Err()
+}
+
+func SetRedisKeyObject(key string, data interface{}, exp time.Duration) error {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	return redisClusterClient.Set(ctx, key, data, exp).Err()
+}
+
+func GetRedisKeyValueString(key string) (result string, err error) {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	if !RedisKeyExists(key) {
+		err = fmt.Errorf("key %s doesn't exist", key)
+		return
+	}
+	result = redisClusterClient.Get(ctx, key).Val()
+	return
+}
+
+func GetRedisKeyValueBytes(key string) (result []byte, err error) {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	if !RedisKeyExists(key) {
+		err = fmt.Errorf("key %s doesn't exist", key)
+		return
+	}
+	result, err = redisClusterClient.Get(ctx, key).Bytes()
+	return
+}
+
+func RedisKeyExists(refNo string) bool {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	return redisClusterClient.Exists(ctx, refNo).Val() == 1
+}
+
+func DeleteRedisKey(refNo string) error {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	return redisClusterClient.Del(ctx, refNo).Err()
+}
+
+func GetRedisTTL(key string) time.Duration {
+	ctx := context.Background()
+	GetRedisConnectionWithAuth(ctx)
+	return redisClusterClient.TTL(ctx, key).Val()
 }
