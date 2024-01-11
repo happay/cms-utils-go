@@ -35,6 +35,7 @@ type QueueClient struct {
 	cred.Cred
 	Url     string
 	session *session.Session
+	sqs     *sqs.SQS
 }
 
 // Enqueue ...
@@ -52,9 +53,7 @@ func (qClient *QueueClient) Enqueue(q QueueMessage) (err error) {
 		MessageAttributes: attributes,
 		QueueUrl:          &qClient.Url,
 	}
-
-	queue := sqs.New(qClient.session)
-	sqsResponse, err := queue.SendMessage(queueMessage)
+	sqsResponse, err := qClient.sqs.SendMessage(queueMessage)
 	if err != nil {
 		return err
 	}
@@ -65,8 +64,6 @@ func (qClient *QueueClient) Enqueue(q QueueMessage) (err error) {
 // Dequeue ...
 func (qClient *QueueClient) Dequeue(numOfPackets ...int64) (queueMessageList []QueueMessage, err error) {
 	var result *sqs.ReceiveMessageOutput
-	queue := sqs.New(qClient.session)
-
 	var size int64
 	if len(numOfPackets) == 0 {
 		size = 1
@@ -87,7 +84,7 @@ func (qClient *QueueClient) Dequeue(numOfPackets ...int64) (queueMessageList []Q
 		WaitTimeSeconds:     aws.Int64(3),    // wait for 3 seconds
 	}
 
-	result, err = queue.ReceiveMessage(receiveMessage)
+	result, err = qClient.sqs.ReceiveMessage(receiveMessage)
 	if err != nil {
 		return
 	}
@@ -139,11 +136,65 @@ func InitQueue(url string, optArgs ...string) (queueClient *QueueClient, err err
 	if err != nil {
 		logger.GetLoggerV3().Error("Error creating session for SQS" + err.Error())
 	}
+	sqs := sqs.New(sess)
 	queueClient = &QueueClient{
 		Url:     url,
 		session: sess,
+		sqs:     sqs,
 	}
 	return
+}
+
+func (qClient *QueueClient) New() (err error) {
+	awsConfig := &aws.Config{
+		Region:     aws.String(qClient.Region),
+		MaxRetries: aws.Int(10),
+	}
+	if qClient.Key != "" && qClient.Secret != "" {
+		awsConfig.Credentials = credentials.NewStaticCredentials(qClient.Key, qClient.Secret, "")
+	}
+	qClient.session, err = utilSession.GetSession(awsConfig)
+	if err != nil {
+		logger.GetLoggerV3().Error("Error creating session for SQS" + err.Error())
+	}
+	qClient.sqs = sqs.New(qClient.session)
+	return
+}
+
+func (qClient *QueueClient) EnqueueInFifo(q QueueMessage) (err error) {
+	attributes := make(map[string]*sqs.MessageAttributeValue, 0)
+	for key, value := range q.Attributes {
+		attributes[key] = &sqs.MessageAttributeValue{
+			DataType:    aws.String("String"),
+			StringValue: aws.String(value),
+		}
+	}
+	queueMessage := &sqs.SendMessageInput{
+		DelaySeconds:   aws.Int64(q.Delay),
+		MessageBody:    aws.String(q.Message),
+		QueueUrl:       &qClient.Url,
+		MessageGroupId: &q.MessageId,
+	}
+	sqsResponse, err := qClient.sqs.SendMessage(queueMessage)
+	if err != nil {
+		return err
+	}
+	q.MessageId = *sqsResponse.MessageId
+	return
+}
+
+func (qClient *QueueClient) NextMessages(MaxNumberOfMessages int64, WaitTimeSeconds int64) ([]*sqs.Message, error) {
+	params := &sqs.ReceiveMessageInput{
+		QueueUrl:            aws.String(qClient.Url),
+		MaxNumberOfMessages: aws.Int64(MaxNumberOfMessages),
+		WaitTimeSeconds:     aws.Int64(WaitTimeSeconds),
+	}
+
+	resp, err := qClient.sqs.ReceiveMessage(params)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Messages, nil
 }
 
 // =========================== Private Functions =================================
