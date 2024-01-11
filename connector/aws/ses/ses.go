@@ -5,14 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/go-gomail/gomail"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
+	"github.com/happay/cms-utils-go/v2/logger"
 )
 
 // ============ Constants =============
@@ -50,6 +54,102 @@ func (emailClient *EmailClient) SendEmail(emailDet EmailDet) (err error) {
 	// sends the email
 	_, err = emailClient.sesClient.SendEmail(emailInput)
 	if err != nil {
+		return
+	}
+	return
+}
+
+// SendEmailWithAttachments sends email with attachments
+func (emailClient *EmailClient) SendEmailWithAttachments(emailDet EmailDet) (err error) {
+	if err = emailDet.CheckIfValidRecipients(); err != nil {
+		return
+	}
+	emailInput := emailDet.createRawInput()
+	_, err = emailClient.sesClient.SendRawEmail(emailInput)
+	return
+}
+
+func (emailClient *EmailClient) AddEmailIdToSuppressionList(emailId, reason string) (err error) {
+	sesClient := sesv2.New(emailClient.session)
+	suppressedDestInput := sesv2.PutSuppressedDestinationInput{
+		EmailAddress: &emailId,
+		Reason:       &reason,
+	}
+	_, err = sesClient.PutSuppressedDestination(&suppressedDestInput)
+	if err != nil {
+		logger.GetLoggerV3().Error(fmt.Sprintf("unable to add email address to account suppression list: %s, err: %s",
+			emailId, err))
+		return
+	}
+	return
+}
+
+func (emailClient *EmailClient) GetEmailIdDetailsFromSuppressionList(emailId string) (result map[string]interface{}, err error) {
+	sesClient := sesv2.New(emailClient.session)
+	suppressedDestInput := sesv2.GetSuppressedDestinationInput{
+		EmailAddress: &emailId,
+	}
+	suppressedOutput, err := sesClient.GetSuppressedDestination(&suppressedDestInput)
+	if err != nil {
+		logger.GetLoggerV3().Error(fmt.Sprintf("unable to get email id from account suppression list: %s, err: %s",
+			emailId, err))
+		return
+	}
+	result = make(map[string]interface{})
+	result["emailId"] = emailId
+	result["reason"] = suppressedOutput.SuppressedDestination.Reason
+	return
+}
+
+func (emailClient *EmailClient) GetListOfEmailIdsOnSuppressionList(startDate, endDate, nextToken string, reason []*string,
+	pageSize int64) (result map[string]interface{}, err error) {
+	sesClient := sesv2.New(emailClient.session)
+	startDateTimeStamp, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		logger.GetLoggerV3().Error(fmt.Sprintf("error while parsing start date: %s, err: %s", startDate, err))
+		return
+	}
+	endDateTimeStamp, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		logger.GetLoggerV3().Error(fmt.Sprintf("error while parsing end date: %s, err: %s", endDate, err))
+		return
+	}
+	suppressionListDetails := sesv2.ListSuppressedDestinationsInput{
+		StartDate: &startDateTimeStamp,
+		EndDate:   &endDateTimeStamp,
+		Reasons:   reason,
+		PageSize:  &pageSize,
+	}
+	if nextToken != "" {
+		suppressionListDetails.NextToken = &nextToken
+	}
+	suppressedListOutput, err := sesClient.ListSuppressedDestinations(&suppressionListDetails)
+	if err != nil {
+		logger.GetLoggerV3().Error(fmt.Sprintf("unable to get the list of email ids from account suppression list - err: %s", err))
+		return
+	}
+	result = make(map[string]interface{}, 0)
+	response := make([]map[string]interface{}, 0)
+	for _, suppressedOutput := range suppressedListOutput.SuppressedDestinationSummaries {
+		details := make(map[string]interface{})
+		details["emailId"] = suppressedOutput.EmailAddress
+		details["reason"] = suppressedOutput.Reason
+		response = append(response, details)
+	}
+	result["data"] = response
+	result["next_token"] = suppressedListOutput.NextToken
+	return
+}
+
+func (emailClient *EmailClient) RemoveEmailIdFromSuppressionList(emailId string) (err error) {
+	sesClient := sesv2.New(emailClient.session)
+	suppressedDestInput := sesv2.DeleteSuppressedDestinationInput{
+		EmailAddress: &emailId,
+	}
+	_, err = sesClient.DeleteSuppressedDestination(&suppressedDestInput)
+	if err != nil {
+		logger.GetLoggerV3().Error(fmt.Sprintf("unable to delete email id from account suppression list: %s, err: %s",
+			emailId, err))
 		return
 	}
 	return
@@ -116,23 +216,13 @@ func (emailClient *EmailClient) New() (err error) {
 		config.Credentials = credentials.NewStaticCredentials(emailClient.Key, emailClient.Secret, "")
 	}
 
-	sess, err := session.NewSession(&config)
+	sess, err := utilSession.GetSession(&config)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating the SES session : %s", err)
 		err = errors.New(reason)
 		return
 	}
 	emailClient.sesClient = ses.New(sess)
-	return
-}
-
-// SendEmailWithAttachments sends email with attachments
-func (emailClient *EmailClient) SendEmailWithAttachments(emailDet EmailDet) (err error) {
-	if err = emailDet.CheckIfValidRecipients(); err != nil {
-		return
-	}
-	emailInput := emailDet.createRawInput()
-	_, err = emailClient.sesClient.SendRawEmail(emailInput)
 	return
 }
 

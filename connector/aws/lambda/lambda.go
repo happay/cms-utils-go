@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
 	"github.com/happay/cms-utils-go/v2/util"
 )
 
@@ -50,7 +50,7 @@ func (lambdaClient *LambdaClient) New() (err error) {
 		config.Credentials = credentials.NewStaticCredentials(lambdaClient.Key, lambdaClient.Secret, "")
 	}
 
-	sess, err := session.NewSession(&config)
+	sess, err := utilSession.GetSession(&config)
 	if err != nil {
 		reason := fmt.Sprintf("error while creating the lambda session : %s", err)
 		err = errors.New(reason)

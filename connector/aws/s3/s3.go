@@ -2,8 +2,11 @@ package s3
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -13,6 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
+	"github.com/happay/cms-utils-go/v2/logger"
 )
 
 // ============ Constants =============
@@ -43,6 +48,9 @@ type S3Client struct {
 func (s3Client *S3Client) UploadFile(inputFilePath, s3Location, s3FileName, acl string) (location string, err error) {
 	file, err := os.OpenFile(inputFilePath, os.O_RDONLY, os.FileMode(GenerateDirectoryPermissionMode))
 	if err != nil {
+		reason := fmt.Sprintf("error opening the file %s: %s", inputFilePath, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	defer file.Close()
@@ -63,6 +71,9 @@ func (s3Client *S3Client) UploadFile(inputFilePath, s3Location, s3FileName, acl 
 	}
 	result, err := s3Uploader.Upload(s3UploadInput)
 	if err != nil {
+		reason := fmt.Sprintf("error uploading the file %s: %s", inputFilePath, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	location = result.Location
@@ -74,20 +85,27 @@ func (s3Client *S3Client) UploadFile(inputFilePath, s3Location, s3FileName, acl 
 func (s3Client *S3Client) DownloadFile(outputFilePath, s3key string) (err error) {
 	file, err := os.Create(outputFilePath)
 	if err != nil {
+		reason := fmt.Sprintf("error creating the output file %s: %s", outputFilePath, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	defer file.Close()
 
 	// downloads the file
 	s3Downloader := s3manager.NewDownloader(s3Client.session)
-	_, err = s3Downloader.Download(file,
+	numBytes, err := s3Downloader.Download(file,
 		&s3.GetObjectInput{
 			Bucket: aws.String(s3Client.BucketName),
 			Key:    aws.String(s3key),
 		})
 	if err != nil {
+		reason := fmt.Sprintf("error downloading the file %s: %s", s3key, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
+	logger.GetLoggerV3().Info("Downloaded:" + file.Name() + fmt.Sprint(numBytes) + "bytes")
 	return
 }
 
@@ -98,10 +116,13 @@ func (s3Client *S3Client) DeleteFiles(s3keys []string) (err error) {
 			Bucket: aws.String(s3Client.BucketName),
 			Key:    aws.String(s3Key),
 		}); err != nil {
+			reason := fmt.Sprintf("error while deleting file from s3, err: %s", err.Error())
+			err = errors.New(reason)
+			logger.GetLoggerV3().Error(err.Error())
 			return
 		}
+		logger.GetLoggerV3().Info(fmt.Sprintf("Deleted files %s", s3Key))
 	}
-
 	return
 }
 
@@ -115,18 +136,19 @@ func (s3Client *S3Client) RemoveFile(key string) (err error) {
 		Bucket: aws.String(s3Client.BucketName),
 		Key:    aws.String(key),
 	}
-	_, err = s3Client.s3.DeleteObject(&deleteS3Object)
+	result, err := s3Client.s3.DeleteObject(&deleteS3Object)
 	if err != nil {
+		reason := fmt.Sprintf("error deleting the file %s: %s", key, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
+	logger.GetLoggerV3().Info(fmt.Sprintf("Deleted (%b) file %s", result.DeleteMarker, key))
 	return
 }
 
 // GetPreSignFile generates temp url for the file for the specified duration
 func (s3Client *S3Client) GetPreSignFile(filePath string, duration time.Duration) (urlStr string, err error) {
-
-	// Create S3 service client
-
 	req, _ := s3Client.s3.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(s3Client.BucketName),
 		Key:    aws.String(filePath),
@@ -134,6 +156,25 @@ func (s3Client *S3Client) GetPreSignFile(filePath string, duration time.Duration
 	urlStr, err = req.Presign(duration)
 
 	if err != nil {
+		reason := fmt.Sprintf("Failed to sign request %s", err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
+		return
+	}
+	return
+}
+
+func (s3Client *S3Client) GetPreSignFileWithContentType(contentType, filePath string, expire time.Duration) (urlStr string, err error) {
+	req, _ := s3Client.s3.GetObjectRequest(&s3.GetObjectInput{
+		Bucket:              aws.String(s3Client.BucketName),
+		Key:                 aws.String(filePath),
+		ResponseContentType: aws.String(contentType),
+	})
+	urlStr, err = req.Presign(expire)
+	if err != nil {
+		reason := fmt.Sprintf("Failed to sign request %s", err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
 		return
 	}
 	return
@@ -148,12 +189,48 @@ func (s3Client *S3Client) New() (err error) {
 		s3Config.Credentials = credentials.NewStaticCredentials(s3Client.Key, s3Client.Secret, "")
 	}
 
-	s3Client.session, err = session.NewSession(&s3Config)
+	s3Client.session, err = utilSession.GetSession(&s3Config)
 	if err != nil {
 		return
 	}
 
 	s3Client.s3 = s3.New(s3Client.session)
+	return
+}
+
+func (s3Client *S3Client) IsFileExists(key string) bool {
+	_, err := s3Client.s3.HeadObject(&s3.HeadObjectInput{
+		Bucket: aws.String(s3Client.BucketName),
+		Key:    aws.String(key),
+	})
+	return err == nil
+}
+
+func (s3Client *S3Client) GetS3FileBytes(s3key string) (fileBytes []byte, err error) {
+
+	unescapedS3key, err := url.PathUnescape(s3key)
+	if err != nil {
+		reason := fmt.Sprintf("error while unescaping path from s3key (%s) : %s",
+			s3key, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
+		return
+	}
+	buff := &aws.WriteAtBuffer{}
+	s3Downloader := s3manager.NewDownloader(s3Client.session)
+	numBytes, err := s3Downloader.Download(buff,
+		&s3.GetObjectInput{
+			Bucket: aws.String(s3Client.BucketName),
+			Key:    aws.String(unescapedS3key),
+		})
+	if err != nil {
+		reason := fmt.Sprintf("error downloading the file %s: %s", unescapedS3key, err)
+		err = errors.New(reason)
+		logger.GetLoggerV3().Error(err.Error())
+		return
+	}
+	fileBytes = buff.Bytes()
+	logger.GetLoggerV3().Info("Downloaded: " + unescapedS3key + fmt.Sprint(numBytes) + "bytes")
 	return
 }
 
