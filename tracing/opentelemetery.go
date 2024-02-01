@@ -1,12 +1,3 @@
-// package tracing
-
-// func InitTracing() {
-
-// 	d := &DataDogProvider{}
-// 	d.TraceProvider()
-// 	defer d.ddtp.Shutdown()
-// }
-
 package tracing
 
 import (

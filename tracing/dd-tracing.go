@@ -8,11 +8,11 @@ import (
 )
 
 type DataDogTracerConfig struct {
-	ServiceName string `json:"service_name" validate:"required"`
-	Host        string `json:"host" validate:"required"`
-	Port        string `json:"port" validate:"required"`
-	Env         string `json:"env"`
-	Version     string `json:"version"`
+	ServiceName string
+	Host        string
+	Port        string
+	Env         string
+	Version     string
 }
 
 type DataDogProvider struct {
