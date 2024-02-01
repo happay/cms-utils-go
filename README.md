@@ -19,6 +19,11 @@ This repository contains a collection of utility functions for Go (Golang) devel
     - go std log
     - logrus
     - slog
+- tracing
+  - datadog
+  - opentelemetry
+- middleware
+  - tracing
 
 ## Installation
 
@@ -54,6 +59,7 @@ func (r *RedisClient) SetRedisKey(ctx context.Context, key, data string, exp tim
 	return r.Set(ctx, key, data, exp).Err()
 }
 ```
+## Redis
 ### Quickstart
 ```go
 package main
@@ -90,3 +96,66 @@ func main() {
 - GRAYLOG_URL: To use logrus logging set GRAYLOG_URL in your env file to get logs in graylog server.
 - REDIS_URL: To use the redi-cluster auth connection set REDIS_URL in your env file.
 - REDIS_PASSWORD: To use the redi-cluster auth connection set REDIS_PASSWORD in your env file.
+
+# Enable Tracing
+To enable tracing we need to follow the below step or given piece of code.
+
+Configure the datadog config, where will define the below varibales,
+  - service Name
+  - host
+  - port
+  - version (optional)
+The default is localhost:8126. It should contain both host and port.
+
+```
+package main
+
+import (
+	"os"
+	"../api"
+	"../common"
+	"../constant"
+
+	"github.com/happay/cms-utils-go/v2/tracing"
+)
+
+func main() {
+	ddConfig := &tracing.DataDogTracerConfig{
+		ServiceName: constant.APP_NAME,
+		Env:         os.Getenv("APP_ENV"),
+		Host:        os.Getenv("DD_AGENT_HOST"),
+		Port:        os.Getenv("DD_DOGSTATSD_PORT"),
+	}
+	ddProvider := tracing.DataDogProvider{
+		TracerConfig: ddConfig,
+	}
+	ddProvider.NewTracerProvider()
+	defer func() {
+		if err := ddProvider.TracerProvider.Shutdown(); err != nil {
+			common.GetLogger().Error("Error shutting down tracer provider: ", err)
+		}
+	}()
+	ddProvider.InitTracing()
+	api.StartServices()
+}
+
+```
+
+In above pieace of code, first we define the DataDogTracerConfig, to initialise the datadog agent. InitTracing will set the tracer provider as global tracer and set the propogator which will help us to allow the distributed tracing (cross-cutting concern). 
+
+Once we set the tracer, we can start with incoming requirest tracing. Adding `TracingMiddleware` as middleware to instrumented service we can trace the incoming requests.
+
+```
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+	utilsMiddleware "github.com/happay/cms-utils-go/v2/middleware"
+)
+func main(){
+    r := gin.Default()
+	r.Use(utilsMiddleware.TracingMiddleware("my-service-name"))
+    r.Run()
+}
+    
+```
