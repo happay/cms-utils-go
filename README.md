@@ -159,3 +159,58 @@ func main(){
 }
     
 ```
+
+To create a span with global tracer provider
+
+```
+import (
+    "github.com/happay/cms-utils-go/v2/tracing"
+)
+func HttpCall(ctx context.Context) {
+	_, span := tracing.StartSpanWithGlobalTracer(ctx, "HttpCall")
+	// Do something
+}
+```
+
+To create a span with expicilty pass the tracer provider
+```
+import (
+    "github.com/happay/cms-utils-go/v2/tracing"
+    ...
+)
+
+var DDProvider tracing.DataDogProvider
+
+
+func init() {
+	ddConfig := &tracing.DataDogTracerConfig{
+		ServiceName: AppName,
+		Env:         os.Getenv("APP_ENV"),
+		Version:     "v1",
+		Host:        os.Getenv("DD_AGENT_HOST"),
+		Port:        os.Getenv("DD_DOGSTATSD_PORT"),
+	}
+	DDProvider = tracing.DataDogProvider{
+		TracerConfig: ddConfig,
+	}
+}
+
+func main() {
+    DDProvider.NewTracerProvider()
+	defer func() {
+		if err := DDProvider.TracerProvider.Shutdown(); err != nil {
+			common.Errorf("Error shutting down tracer provider: %v", err)
+		}
+		common.Infof("tracer provider shutting down gracefully")
+	}()
+	DDProvider.InitTracing()
+	// Start your service
+}
+
+func HttpCall(ctx context.Context) {
+	_, span := DDProvider.StartSpan(ctx, "HttpCall")
+	// Do something
+}
+```
+
+In above code, on init function we set the ddprovider value and in main function the value get set as tracer provider, which we can use as global variable.
