@@ -1,12 +1,3 @@
-/*
-Copyright (C) Happay (VA Tech Ventures Pvt Ltd) 2012-18 - All Rights Reserved
-Unauthorized copying of this file, via any medium is strictly prohibited
-Proprietary and confidential
-Written by:
-	Kaustubh Mallik <kaustubh.mallik@happay.in>, Aug 2018
-	Abhishek Gowda <abhishek.g@happay.in>, Sep 2018
-*/
-
 package connector
 
 import (
