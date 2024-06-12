@@ -22,6 +22,12 @@ var logWriter io.Writer
 var logger *log.Logger
 var logInit sync.Once
 
+type Logger interface {
+	Infof(msg string, args ...any)
+	Errorf(msg string, args ...any)
+	Print(v ...interface{})
+}
+
 func initializeLogger(logPrefix, logPath string) {
 	logDirSplit := strings.Split(logPath, "/")
 	var logDirSlice []string

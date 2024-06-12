@@ -2,7 +2,10 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"runtime"
+	"time"
 
 	"log/slog"
 )
@@ -50,4 +53,39 @@ func (h ContextHandler) observe(ctx context.Context) (as []slog.Attr) {
 		as = append(as, a)
 	}
 	return
+}
+
+var (
+	Log *slog.Logger
+)
+
+type SlogLoggerImpl struct {
+	Logger *slog.Logger
+}
+
+func NewSlogLogger(logger *slog.Logger) Logger {
+	return &SlogLoggerImpl{Logger: logger}
+}
+
+func InitSlogLogger() *slog.Logger {
+	return GetLoggerV3() // Initialize your slog.Logger here
+}
+
+func (l *SlogLoggerImpl) log(level slog.Level, msg string, args ...any) {
+	var pcs [1]uintptr
+	runtime.Callers(3, pcs[:]) // skip [Callers, log, Infof/Errorf]
+	r := slog.NewRecord(time.Now(), level, fmt.Sprintf(msg, args...), pcs[0])
+	_ = l.Logger.Handler().Handle(context.Background(), r)
+}
+
+func (l *SlogLoggerImpl) Infof(msg string, args ...any) {
+	l.log(slog.LevelInfo, msg, args...)
+}
+
+func (l *SlogLoggerImpl) Errorf(msg string, args ...any) {
+	l.log(slog.LevelError, msg, args...)
+}
+
+func (l *SlogLoggerImpl) Print(v ...interface{}) {
+	l.log(slog.LevelInfo, "Log message: "+fmt.Sprint(v...))
 }
