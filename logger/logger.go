@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -21,6 +22,18 @@ const FileWritePermissionMode = 0644
 var logWriter io.Writer
 var logger *log.Logger
 var logInit sync.Once
+
+type Logger interface {
+	Infof(msg string, args ...any)
+	InfoContext(ctx context.Context, msg string, args ...any)
+	Debug(msg string, args ...any)
+	DebugContext(ctx context.Context, msg string, args ...any)
+	Warn(msg string, args ...any)
+	WarnContext(ctx context.Context, msg string, args ...any)
+	Errorf(msg string, args ...any)
+	ErrorContext(ctx context.Context, msg string, args ...any)
+	Print(v ...interface{})
+}
 
 func initializeLogger(logPrefix, logPath string) {
 	logDirSplit := strings.Split(logPath, "/")
