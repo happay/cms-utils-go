@@ -170,10 +170,11 @@ func (qClient *QueueClient) EnqueueInFifo(q QueueMessage) (err error) {
 		}
 	}
 	queueMessage := &sqs.SendMessageInput{
-		DelaySeconds:   aws.Int64(q.Delay),
-		MessageBody:    aws.String(q.Message),
-		QueueUrl:       &qClient.Url,
-		MessageGroupId: &q.MessageId,
+		DelaySeconds:      aws.Int64(q.Delay),
+		MessageBody:       aws.String(q.Message),
+		QueueUrl:          &qClient.Url,
+		MessageAttributes: attributes,
+		MessageGroupId:    &q.MessageId,
 	}
 	sqsResponse, err := qClient.sqs.SendMessage(queueMessage)
 	if err != nil {
