@@ -17,10 +17,13 @@ import (
 )
 
 const (
-	OpenSearchUrl = "url"
-	Shard         = "shard"
-	Replica       = "replica"
+	OpenSearchUrl      = "url"
+	Shard              = "shard"
+	Replica            = "replica"
+	OpenSearchUSER     = "user"
+	OpenSearchPassword = "password"
 )
+const EmptyString = ""
 
 type Configuration struct {
 	Settings struct {
@@ -75,10 +78,25 @@ func initopenSearchConnectionAndIndexes(osCredPath, osConfigKey string, index st
 
 	// initialize elastic search client
 	openSearchConnectionURL := fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[OpenSearchUrl]))
-	openSearchClient, err = elastic.NewSimpleClient(elastic.SetURL(openSearchConnectionURL)) // connecting to open search, NOTE: sniffing is turned off currently
-	if elastic.IsConnErr(err) {
-		err = fmt.Errorf("initializing open search client failed: %s", err)
-		return
+	openSearchConnectionUSER := fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[OpenSearchUSER]))
+	openSearchConnectionPASS := fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[OpenSearchPassword]))
+	if openSearchConnectionPASS != EmptyString && openSearchConnectionUSER != EmptyString {
+		openSearchClient, err = elastic.NewClient(
+			elastic.SetURL(openSearchConnectionURL),
+			elastic.SetBasicAuth(openSearchConnectionUSER, openSearchConnectionPASS),
+			elastic.SetSniff(false),
+		)
+		if err != nil {
+			err = fmt.Errorf("initializing open search client failed: %s", err)
+			return
+		}
+
+	} else {
+		openSearchClient, err = elastic.NewSimpleClient(elastic.SetURL(openSearchConnectionURL)) // connecting to open search, NOTE: sniffing is turned off currently
+		if elastic.IsConnErr(err) {
+			err = fmt.Errorf("initializing open search client failed: %s", err)
+			return
+		}
 	}
 
 	shard, err := strconv.Atoi(fmt.Sprintf("%s", util.GetConfigValue(openSearchConfig[Shard])))
