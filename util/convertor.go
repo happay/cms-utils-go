@@ -24,3 +24,15 @@ func MapToStruct(sourceMap map[string]interface{}, targetStruct interface{}) err
 
 	return nil
 }
+
+// ConvertMapToStruct, will convert the map into struct passed in type parameter([T any]).
+func ConvertMapToStruct[T any](mapData map[string]interface{}) (resp T, err error) {
+	// Convert map to json string
+	jsonStr, err := json.Marshal(mapData)
+	if err != nil {
+		return
+	}
+	// Convert json string to struct
+	err = json.Unmarshal(jsonStr, &resp)
+	return
+}

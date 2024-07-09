@@ -12,6 +12,7 @@ This repository contains a collection of utility functions for Go (Golang) devel
 - Opensearch
 - Database
     - postgres
+    - mysql
     - redis
     - redis-cluster with Auth
 - slack
@@ -93,7 +94,6 @@ func main() {
 
 ```
 ## Required enviroment variable
-- GRAYLOG_URL: To use logrus logging set GRAYLOG_URL in your env file to get logs in graylog server.
 - REDIS_URL: To use the redi-cluster auth connection set REDIS_URL in your env file.
 - REDIS_PASSWORD: To use the redi-cluster auth connection set REDIS_PASSWORD in your env file.
 
@@ -214,3 +214,11 @@ func HttpCall(ctx context.Context) {
 ```
 
 In above code, on init function we set the ddprovider value and in main function the value get set as tracer provider, which we can use as global variable.
+
+# Database
+## Mysql Connection
+
+To connect with mysql connection 
+```
+db = connector.GetMySqlConn(mysqlConfig, "mysql")
+```
