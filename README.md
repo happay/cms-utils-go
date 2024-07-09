@@ -12,6 +12,7 @@ This repository contains a collection of utility functions for Go (Golang) devel
 - Opensearch
 - Database
     - postgres
+    - mysql
     - redis
     - redis-cluster with Auth
 - slack
@@ -93,7 +94,6 @@ func main() {
 
 ```
 ## Required enviroment variable
-- GRAYLOG_URL: To use logrus logging set GRAYLOG_URL in your env file to get logs in graylog server.
 - REDIS_URL: To use the redi-cluster auth connection set REDIS_URL in your env file.
 - REDIS_PASSWORD: To use the redi-cluster auth connection set REDIS_PASSWORD in your env file.
 
@@ -214,3 +214,67 @@ func HttpCall(ctx context.Context) {
 ```
 
 In above code, on init function we set the ddprovider value and in main function the value get set as tracer provider, which we can use as global variable.
+
+# Database
+## Mysql Connection
+
+To connect with mysql connection 
+```
+type Mysql struct {
+	Host               string `json:"host"`
+	Port               string `json:"port"`
+	Username           string `json:"username"`
+	Password           string `json:"password"`
+	Database           string `json:"database"`
+	MaxOpenConnections string `json:"maxOpenConnections"`
+	MaxIdleConnections string `json:"maxIdleConnections"`
+}
+```
+use above Mysql map to pass `mysqlConfig`
+
+```
+db = connector.GetMySqlConn(mysqlConfig, "mysql")
+```
+
+# Utils
+## Http call
+
+Function `MakeHttpRequest` provides the http call to network, which take http path, [http method](https://pkg.go.dev/net/http#pkg-constants) and `HttpOption` optional parmaters.
+
+### WithQueryParam
+`func WithQueryParam(queryParams map[string]string) HttpOption`
+
+This will take all the Query params in map[string]string
+
+### WithRequestBody
+`func WithRequestBody(requestBody PropertyMap) HttpOption`
+
+This will set request body to http request
+
+### WithHeader
+
+`func WithHeader(header map[string]string) HttpOption`
+
+This will set header to http request, if http request accept the headers
+
+### WithTimeoutInSec
+
+`func WithTimeoutInSec(timeout int64) HttpOption`
+
+Sets the timeout if required.
+
+### WithCertificate
+
+`func WithCertificate(publicKey, privateKey string) HttpOption`
+
+*NOTE*: PropertyMap is `type PropertyMap map[string]interface{}`
+
+e.g.
+```
+statusCode, responseBody, err := util.MakeHttpRequest(
+		http.MethodPost,
+		path,
+		util.WithHeader(reqData.Headers),
+		util.WithRequestBody(util.PropertyMap(reqData.RequestBody)),
+	)
+```

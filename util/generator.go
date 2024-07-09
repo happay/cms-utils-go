@@ -1,6 +1,8 @@
 package util
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"strconv"
 	"strings"
 
@@ -49,4 +51,13 @@ func CreateUUID() string {
 	}
 	return strings.Replace(id.String(), "-", "", -1)
 	//return strings.Replace(id, "-", "", -1)
+}
+
+// Returns the sha256 hash value of the input string
+func GeneratePanHash(Pan string) string {
+	hash := sha256.New()
+	hash.Write([]byte(Pan))
+	md := hash.Sum(nil)
+	mdStr := hex.EncodeToString(md)
+	return mdStr
 }
