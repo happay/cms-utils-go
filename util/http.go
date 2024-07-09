@@ -20,9 +20,7 @@ type Options struct {
 	timeout               time.Duration
 }
 
-func MakeHttpRequest(method, path string, opts ...HttpOption) (
-	responseCode int, responseBody map[string]interface{}, err error,
-) {
+func MakeHttpRequest(method, path string, opts ...HttpOption) (responseCode int, responseBody map[string]interface{}, err error) {
 	h := &Options{}
 	for _, opt := range opts {
 		opt(h)
