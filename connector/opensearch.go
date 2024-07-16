@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"io/ioutil"
 	"strconv"
 	"strings"
@@ -177,7 +178,7 @@ func PostResponseOpenSearch(serviceName string, appId, reqId string, respLog map
 	}
 	return
 }
-func GetResponseOpenSearch(serviceName, appId, reqId string) (searchResult *elastic.SearchResult, err error) {
+func GetResponseOpenSearch(serviceName, appId, reqId string, db *gorm.DB) (searchResult *elastic.SearchResult, err error) {
 	appIdQuery := elastic.NewTermQuery("AppId.keyword", appId)
 	reqIdQuery := elastic.NewTermQuery("RequestId.keyword", reqId)
 	query := elastic.NewBoolQuery().Must(appIdQuery, reqIdQuery)
