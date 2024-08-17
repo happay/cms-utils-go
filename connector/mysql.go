@@ -39,13 +39,14 @@ func GetMySqlConn(mySQLDbConfigs map[string]string, configKey string) *gorm.DB {
 
 func formatConnString(mySQLDbConfigs map[string]string) string {
 	config := mysql.Config{
-		User:      mySQLDbConfigs["user"],
-		Passwd:    mySQLDbConfigs["password"],
-		Net:       "tcp",
-		Addr:      mySQLDbConfigs["host"],
-		DBName:    mySQLDbConfigs["dbname"],
-		ParseTime: true,
-		Loc:       time.UTC,
+		User:                 mySQLDbConfigs["user"],
+		Passwd:               mySQLDbConfigs["password"],
+		Net:                  "tcp",
+		Addr:                 mySQLDbConfigs["host"],
+		DBName:               mySQLDbConfigs["dbname"],
+		ParseTime:            true,
+		AllowNativePasswords: true,
+		Loc:                  time.UTC,
 	}
 	return config.FormatDSN()
 }
