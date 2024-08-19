@@ -17,7 +17,7 @@ const (
 	MySqlConfigKey = "mysql"
 )
 
-func GetMySqlConn(mySQLDbConfigs map[string]string, configKey string) *gorm.DB {
+func GetMySqlConn(mySQLDbConfigs map[string]string) *gorm.DB {
 	logger.GetLoggerV3().Info("initiating db connection")
 	var err error
 	connStr := formatConnString(mySQLDbConfigs)
