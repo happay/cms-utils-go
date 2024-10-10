@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/happay/cms-utils-go/v2/logger"
+	"github.com/happay/cms-utils-go/v3/logger"
 )
 
 const (

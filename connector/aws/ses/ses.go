@@ -14,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/go-gomail/gomail"
-	"github.com/happay/cms-utils-go/v2/connector/aws/cred"
-	utilSession "github.com/happay/cms-utils-go/v2/connector/aws/session"
-	"github.com/happay/cms-utils-go/v2/logger"
+	"github.com/happay/cms-utils-go/v3/connector/aws/cred"
+	utilSession "github.com/happay/cms-utils-go/v3/connector/aws/session"
+	"github.com/happay/cms-utils-go/v3/logger"
 )
 
 // ============ Constants =============

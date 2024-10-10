@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/happay/cms-utils-go/v2/logger"
+	"github.com/happay/cms-utils-go/v3/logger"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/happay/cms-utils-go/v2/util"
+	"github.com/happay/cms-utils-go/v3/util"
 )
 
 const Pong = "PONG"
