@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/happay/cms-utils-go/v2/logger"
+	"github.com/happay/cms-utils-go/v3/logger"
 	"github.com/jinzhu/gorm"
 
 	"github.com/go-sql-driver/mysql"

@@ -29,7 +29,7 @@ This repository contains a collection of utility functions for Go (Golang) devel
 ## Installation
 
 ```shell
-go get github.com/happay/cms-utils-go/v2@v2.0.3
+go get github.com/happay/cms-utils-go/v3@v2.0.3
 go mod tidy
 ```
 Please make sure we update the exiting import 
@@ -38,7 +38,7 @@ import github.com/happay/cms-utils-go
 ```
 with major version 2 in order to use redis-cluster client with auth  mode and various other helpful utilities.
 ```go 
-import github.com/happay/cms-utils-go/v2
+import github.com/happay/cms-utils-go/v3
 ```
 Note: Since the latest version 2 support upgreded version of redis v9, to support this following changes will be required in exiting code:
 
@@ -70,7 +70,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/happay/cms-utils-go/v2/connector"
+    "github.com/happay/cms-utils-go/v3/connector"
     "github.com/redis/go-redis/v9"
 )
 
@@ -116,7 +116,7 @@ import (
 	"../common"
 	"../constant"
 
-	"github.com/happay/cms-utils-go/v2/tracing"
+	"github.com/happay/cms-utils-go/v3/tracing"
 )
 
 func main() {
@@ -150,7 +150,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	utilsMiddleware "github.com/happay/cms-utils-go/v2/middleware"
+	utilsMiddleware "github.com/happay/cms-utils-go/v3/middleware"
 )
 func main(){
     r := gin.Default()
@@ -164,7 +164,7 @@ To create a span with global tracer provider
 
 ```
 import (
-    "github.com/happay/cms-utils-go/v2/tracing"
+    "github.com/happay/cms-utils-go/v3/tracing"
 )
 func HttpCall(ctx context.Context) {
 	_, span := tracing.StartSpanWithGlobalTracer(ctx, "HttpCall")
@@ -175,7 +175,7 @@ func HttpCall(ctx context.Context) {
 To create a span with expicilty pass the tracer provider
 ```
 import (
-    "github.com/happay/cms-utils-go/v2/tracing"
+    "github.com/happay/cms-utils-go/v3/tracing"
     ...
 )
 

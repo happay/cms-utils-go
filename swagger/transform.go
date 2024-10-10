@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/happay/cms-utils-go/v2/logger"
+	"github.com/happay/cms-utils-go/v3/logger"
 )
 
 const (
