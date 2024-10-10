@@ -265,7 +265,7 @@ Sets the timeout if required.
 
 ### WithCertificate
 
-`func WithCertificate(publicKey, privateKey string) HttpOption`
+`func WithCertificate(publicKey, privateKey byte) HttpOption`
 
 *NOTE*: PropertyMap is `type PropertyMap map[string]interface{}`
 
