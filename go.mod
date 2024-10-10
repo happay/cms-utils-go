@@ -1,4 +1,4 @@
-module github.com/happay/cms-utils-go/v2
+module github.com/happay/cms-utils-go/v3
 
 go 1.21
 
