@@ -29,7 +29,7 @@ This repository contains a collection of utility functions for Go (Golang) devel
 ## Installation
 
 ```shell
-go get github.com/happay/cms-utils-go/v3@v2.0.3
+go get github.com/happay/cms-utils-go/v3@v3.0.1
 go mod tidy
 ```
 Please make sure we update the exiting import 
