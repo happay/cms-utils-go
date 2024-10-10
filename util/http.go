@@ -7,19 +7,18 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/happay/cms-utils-go/v2/logger"
 )
 
 type Options struct {
-	publicKey, privateKey string
+	publicKey, privateKey []byte
 	queryParams           map[string]string
 	requestBody           PropertyMap
 	header                map[string]string
 	timeout               time.Duration
-	caCert                string
+	caCert                []byte
 }
 
 func MakeHttpRequest(method, path string, opts ...HttpOption) (responseCode int, responseBody map[string]interface{}, err error) {
@@ -56,14 +55,14 @@ func WithTimeoutInSec(timeout int64) HttpOption {
 	}
 }
 
-func WithCertificate(publicKey, privateKey string) HttpOption {
+func WithCertificate(publicKey, privateKey []byte) HttpOption {
 	return func(h *Options) {
 		h.privateKey = privateKey
 		h.publicKey = publicKey
 	}
 }
 
-func WithCaCert(caCert string) HttpOption {
+func WithCaCert(caCert []byte) HttpOption {
 	return func(h *Options) {
 		h.caCert = caCert
 	}
@@ -72,15 +71,15 @@ func WithCaCert(caCert string) HttpOption {
 func addClientConfig(opt *Options) *http.Client {
 	client := &http.Client{}
 	tlsConfig := &tls.Config{}
-	if strings.TrimSpace(opt.privateKey) != "" && strings.TrimSpace(opt.publicKey) != "" {
-		cert, _ := tls.X509KeyPair([]byte(opt.publicKey), []byte(opt.privateKey))
+	if len(opt.privateKey) != 0 && len(opt.publicKey) != 0 {
+		cert, _ := tls.X509KeyPair(opt.publicKey, opt.privateKey)
 		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
 
 	// Load CA certs (from a provided cert string)
-	if strings.TrimSpace(opt.caCert) != "" {
+	if len(opt.caCert) != 0 {
 		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM([]byte(opt.caCert))
+		caCertPool.AppendCertsFromPEM(opt.caCert)
 		tlsConfig.RootCAs = caCertPool
 	}
 	// Assign the TLS config to the client's transport if configured
