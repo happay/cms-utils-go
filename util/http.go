@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"net/http"
@@ -18,6 +19,7 @@ type Options struct {
 	requestBody           PropertyMap
 	header                map[string]string
 	timeout               time.Duration
+	caCert                string
 }
 
 func MakeHttpRequest(method, path string, opts ...HttpOption) (responseCode int, responseBody map[string]interface{}, err error) {
@@ -61,14 +63,30 @@ func WithCertificate(publicKey, privateKey string) HttpOption {
 	}
 }
 
+func WithCaCert(caCert string) HttpOption {
+	return func(h *Options) {
+		h.caCert = caCert
+	}
+}
+
 func addClientConfig(opt *Options) *http.Client {
 	client := &http.Client{}
+	tlsConfig := &tls.Config{}
 	if strings.TrimSpace(opt.privateKey) != "" && strings.TrimSpace(opt.publicKey) != "" {
-		cert, _ := tls.LoadX509KeyPair(opt.publicKey, opt.privateKey)
+		cert, _ := tls.X509KeyPair([]byte(opt.publicKey), []byte(opt.privateKey))
+		tlsConfig.Certificates = []tls.Certificate{cert}
+	}
+
+	// Load CA certs (from a provided cert string)
+	if strings.TrimSpace(opt.caCert) != "" {
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM([]byte(opt.caCert))
+		tlsConfig.RootCAs = caCertPool
+	}
+	// Assign the TLS config to the client's transport if configured
+	if len(tlsConfig.Certificates) > 0 || tlsConfig.RootCAs != nil {
 		client.Transport = &http.Transport{
-			TLSClientConfig: &tls.Config{
-				Certificates: []tls.Certificate{cert},
-			},
+			TLSClientConfig: tlsConfig,
 		}
 	}
 	if opt.timeout != 0 {
