@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/happay/cms-utils-go/v2/logger"
+	"github.com/happay/cms-utils-go/v3/logger"
 )
 
 type Options struct {
@@ -19,6 +19,7 @@ type Options struct {
 	header                map[string]string
 	timeout               time.Duration
 	caCert                []byte
+	insecureSkipVerify    bool
 }
 
 func MakeHttpRequest(method, path string, opts ...HttpOption) (responseCode int, responseBody map[string]interface{}, err error) {
@@ -55,22 +56,22 @@ func WithTimeoutInSec(timeout int64) HttpOption {
 	}
 }
 
-func WithCertificate(publicKey, privateKey []byte) HttpOption {
+func WithCertificate(publicKey, privateKey, caCert []byte, insecureSkipVerify bool) HttpOption {
 	return func(h *Options) {
 		h.privateKey = privateKey
 		h.publicKey = publicKey
-	}
-}
-
-func WithCaCert(caCert []byte) HttpOption {
-	return func(h *Options) {
-		h.caCert = caCert
+		if len(caCert) != 0 {
+			h.caCert = caCert
+		}
+		h.insecureSkipVerify = insecureSkipVerify
 	}
 }
 
 func addClientConfig(opt *Options) *http.Client {
 	client := &http.Client{}
-	tlsConfig := &tls.Config{}
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: opt.insecureSkipVerify,
+	}
 	if len(opt.privateKey) != 0 && len(opt.publicKey) != 0 {
 		cert, _ := tls.X509KeyPair(opt.publicKey, opt.privateKey)
 		tlsConfig.Certificates = []tls.Certificate{cert}
