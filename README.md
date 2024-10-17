@@ -265,7 +265,10 @@ Sets the timeout if required.
 
 ### WithCertificate
 
-`func WithCertificate(publicKey, privateKey string) HttpOption`
+- To skip the ssl verification pass `insecureSkipVerify = true` 
+- To send the rootCA pass the caCert
+
+`func WithCertificate(publicKey, privateKey, caCert []byte, insecureSkipVerify bool) HttpOption`
 
 *NOTE*: PropertyMap is `type PropertyMap map[string]interface{}`
 
@@ -275,6 +278,6 @@ statusCode, responseBody, err := util.MakeHttpRequest(
 		http.MethodPost,
 		path,
 		util.WithHeader(reqData.Headers),
-		util.WithRequestBody(util.PropertyMap(reqData.RequestBody)),
+		util.WithRequestBody(util.PropertyMap(reqData.RequestBody),util.WithCertificate(serverSslCert, serverSslKey, ntsPublicKey, true)),
 	)
 ```
