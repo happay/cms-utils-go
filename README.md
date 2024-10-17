@@ -29,7 +29,7 @@ This repository contains a collection of utility functions for Go (Golang) devel
 ## Installation
 
 ```shell
-go get github.com/happay/cms-utils-go/v2@v2.0.3
+go get github.com/happay/cms-utils-go/{version}@{tag}
 go mod tidy
 ```
 Please make sure we update the exiting import 
@@ -46,7 +46,7 @@ Note: Since the latest version 2 support upgreded version of redis v9, to suppor
 ```go 
 go get github.com/redis/go-redis/v9
 ```
-2. version 9 of redis does not support (*redis.Client).Context() in order to resolve that please use go context (context.Context). eg
+1. version 9 of redis does not support (*redis.Client).Context() in order to resolve that please use go context (context.Context). eg
 
 Then
 ```go
@@ -265,7 +265,10 @@ Sets the timeout if required.
 
 ### WithCertificate
 
-`func WithCertificate(publicKey, privateKey string) HttpOption`
+- To skip the ssl verification pass `insecureSkipVerify = true` 
+- To send the rootCA pass the caCert
+
+`func WithCertificate(publicKey, privateKey, caCert []byte, insecureSkipVerify bool) HttpOption`
 
 *NOTE*: PropertyMap is `type PropertyMap map[string]interface{}`
 
@@ -275,6 +278,6 @@ statusCode, responseBody, err := util.MakeHttpRequest(
 		http.MethodPost,
 		path,
 		util.WithHeader(reqData.Headers),
-		util.WithRequestBody(util.PropertyMap(reqData.RequestBody)),
+		util.WithRequestBody(util.PropertyMap(reqData.RequestBody),util.WithCertificate(serverSslCert, serverSslKey, ntsPublicKey, true)),
 	)
 ```
