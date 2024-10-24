@@ -274,7 +274,7 @@ Sets the timeout if required.
 
 e.g.
 ```
-statusCode, responseBody, err := util.MakeHttpRequest(
+response, err := util.MakeHttpRequest(
 		http.MethodPost,
 		path,
 		util.WithHeader(reqData.Headers),

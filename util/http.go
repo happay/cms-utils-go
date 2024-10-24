@@ -5,7 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"encoding/json"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,7 +22,7 @@ type Options struct {
 	insecureSkipVerify    bool
 }
 
-func MakeHttpRequest(method, path string, opts ...HttpOption) (responseCode int, responseBody map[string]interface{}, err error) {
+func MakeHttpRequest(method, path string, opts ...HttpOption) (responseBody *http.Response, err error) {
 	h := &Options{}
 	for _, opt := range opts {
 		opt(h)
@@ -95,7 +95,7 @@ func addClientConfig(opt *Options) *http.Client {
 	return client
 }
 
-func httpRequest(method, path string, opt *Options) (responseCode int, responseBody map[string]interface{}, err error) {
+func httpRequest(method, path string, opt *Options) (resp *http.Response, err error) {
 	requestBody := opt.requestBody
 	requestBytes, err := requestBody.Value()
 	if err != nil {
@@ -107,12 +107,12 @@ func httpRequest(method, path string, opt *Options) (responseCode int, responseB
 		return
 	}
 
-	logger.GetLoggerV3().Info("[httpRequest] method:  %s, path: %s\n", method, path)
-	logger.GetLoggerV3().Info("[httpRequest] request body:  %v\n", opt.requestBody)
+	logger.GetLoggerV3().Info("[httpRequest] method: , path: ", slog.String("Method", method), slog.String("path", path))
+	logger.GetLoggerV3().Info("[httpRequest] request body:", slog.Any("requestBody", opt.requestBody))
 
 	// if query param exits, add
 	if len(opt.queryParams) != 0 {
-		logger.GetLoggerV3().Info("[httpRequest] query param:  %v\n", opt.queryParams)
+		logger.GetLoggerV3().Info("[httpRequest] query param: ", slog.Any("Query Params", opt.queryParams))
 		queryParams := opt.queryParams
 		q := req.URL.Query()
 		for key, val := range queryParams {
@@ -121,25 +121,14 @@ func httpRequest(method, path string, opt *Options) (responseCode int, responseB
 		req.URL.RawQuery = q.Encode()
 	}
 	if len(opt.header) != 0 {
-		logger.GetLoggerV3().Info("[httpRequest] Header:  %v\n", opt.queryParams)
+		logger.GetLoggerV3().Info("[httpRequest] Header:  %v\n", slog.Any("Header", opt.header))
 		for key, val := range opt.header {
 			req.Header.Set(key, val)
 		}
 	}
 	client := addClientConfig(opt)
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return
-	}
-
-	defer resp.Body.Close()
-
-	responseCode = resp.StatusCode
-	responseBody = make(map[string]interface{})
-
-	err = json.NewDecoder(resp.Body).Decode(&responseBody)
-	logger.GetLoggerV3().Info("[httpRequest] response body:  %v\n", responseBody)
+	resp, err = client.Do(req)
 	return
 }
 
